@@ -236,6 +236,11 @@
             color: #856404;
         }
 
+        .status-vencido {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
         .action-btn {
             padding: 6px 12px;
             margin: 2px;
@@ -563,6 +568,7 @@
                     <option value="todos">Todos</option>
                     <option value="pendiente">Pendientes</option>
                     <option value="pagado">Pagados</option>
+                    <option value="vencido">Vencidos</option>
                 </select>
             </div>
 
@@ -570,12 +576,14 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Fecha</th>
+                            <th>Fecha Pedido</th>
                             <th>Cliente</th>
                             <th>Tipo</th>
                             <th>Cantidad</th>
                             <th>Total</th>
                             <th>Comisión</th>
+                            <th>Fecha Factura</th>
+                            <th>Fecha Pago</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -612,6 +620,12 @@
                 <small class="client-price">Común: 1000 lb/bin o 900 lb/bin</small>
             </div>
 
+            <div class="form-group">
+                <label>Días de Crédito</label>
+                <input type="number" id="diasCredito" placeholder="Ej: 30" value="0">
+                <small class="client-price">Cantidad de días para el pago (0 = pago inmediato)</small>
+            </div>
+
             <button class="btn" onclick="saveClient()">➕ Agregar Cliente</button>
 
             <h3 style="margin-top: 30px; margin-bottom: 15px; color: #333;">Clientes Registrados</h3>
@@ -623,6 +637,7 @@
                             <th>Precio Camarón</th>
                             <th>Precio Hielo</th>
                             <th>Lb/Bin</th>
+                            <th>Crédito</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -1068,8 +1083,17 @@
             const tbody = document.getElementById('ordersBody');
             const filtro = document.getElementById('filtroEstado')?.value || 'todos';
             
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
             let filteredOrders = window.orders;
-            if (filtro !== 'todos') {
+            if (filtro === 'vencido') {
+                filteredOrders = window.orders.filter(o => {
+                    if (o.estado === 'pagado' || !o.fechaFactura) return false;
+                    const fechaPago = new Date(o.fechaPago);
+                    return fechaPago < today;
+                });
+            } else if (filtro !== 'todos') {
                 filteredOrders = window.orders.filter(o => o.estado === filtro);
             }
             
@@ -1083,8 +1107,32 @@
                     ? `${order.cantidad.toFixed(2)} lb` 
                     : `${order.cantidad} sacos`;
                 
-                const statusClass = order.estado === 'pagado' ? 'status-paid' : 'status-pending';
-                const statusText = order.estado === 'pagado' ? 'Pagado' : 'Pendiente';
+                // Determinar estado
+                let statusClass, statusText;
+                if (order.estado === 'pagado') {
+                    statusClass = 'status-paid';
+                    statusText = 'Pagado';
+                } else if (order.fechaPago) {
+                    const fechaPago = new Date(order.fechaPago);
+                    if (fechaPago < today) {
+                        statusClass = 'status-vencido';
+                        statusText = 'Vencido';
+                    } else {
+                        statusClass = 'status-pending';
+                        statusText = 'Pendiente';
+                    }
+                } else {
+                    statusClass = 'status-pending';
+                    statusText = 'Sin Factura';
+                }
+                
+                const fechaFacturaHtml = order.fechaFactura 
+                    ? order.fechaFactura
+                    : `<button class="action-btn" style="background: #17a2b8; color: white;" data-action="add-invoice" data-id="${order.id}">📄 Agregar</button>`;
+                
+                const fechaPagoHtml = order.fechaPago 
+                    ? `<strong>${order.fechaPago}</strong>`
+                    : '-';
                 
                 row.innerHTML = `
                     <td>${order.fecha}</td>
@@ -1093,6 +1141,8 @@
                     <td>${cantidadText}</td>
                     <td>$${order.total.toFixed(2)}</td>
                     <td><strong>$${order.comision.toFixed(2)}</strong></td>
+                    <td>${fechaFacturaHtml}</td>
+                    <td>${fechaPagoHtml}</td>
                     <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                     <td>
                         ${order.estado === 'pendiente' 
@@ -1113,13 +1163,48 @@
                         await markAsPaid(orderId);
                     } else if (action === 'delete') {
                         await deleteOrder(orderId);
+                    } else if (action === 'add-invoice') {
+                        await addInvoiceDate(orderId);
                     }
                 });
             });
             
             if (filteredOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 30px; color: #999;">No hay pedidos</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 30px; color: #999;">No hay pedidos</td></tr>';
             }
+        }
+
+        // Add invoice date to order
+        async function addInvoiceDate(orderId) {
+            const order = window.orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            const fechaFactura = prompt('Ingresa la fecha de emisión de la factura (YYYY-MM-DD):');
+            if (!fechaFactura) return;
+            
+            // Validar formato de fecha
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaFactura)) {
+                alert('Formato inválido. Usa: YYYY-MM-DD (Ej: 2026-02-16)');
+                return;
+            }
+            
+            // Buscar cliente para obtener días de crédito
+            const client = window.clients.find(c => c.nombre === order.cliente);
+            const diasCredito = client?.diasCredito || 0;
+            
+            // Calcular fecha de pago
+            const fechaFacturaDate = new Date(fechaFactura + 'T00:00:00');
+            const fechaPagoDate = new Date(fechaFacturaDate);
+            fechaPagoDate.setDate(fechaPagoDate.getDate() + diasCredito);
+            
+            order.fechaFactura = fechaFactura;
+            order.fechaPago = fechaPagoDate.toISOString().split('T')[0];
+            order.diasCredito = diasCredito;
+            
+            await window.saveDataToFirebase();
+            displayOrders();
+            
+            alert(`✅ Factura registrada\n\nFecha factura: ${fechaFactura}\nDías crédito: ${diasCredito}\nFecha pago: ${order.fechaPago}`);
         }
 
         function filterOrders() {
@@ -1160,6 +1245,7 @@
             const precioCamaron = parseFloat(document.getElementById('precioClienteCamaron').value) || 0;
             const precioHielo = parseFloat(document.getElementById('precioClienteHielo').value) || 0;
             const librasPorBin = parseFloat(document.getElementById('librasPorBin').value) || 1000;
+            const diasCredito = parseInt(document.getElementById('diasCredito').value) || 0;
             
             if (!nombre) {
                 alert('Ingresa el nombre');
@@ -1176,6 +1262,7 @@
                 precioCamaron,
                 precioHielo,
                 librasPorBin,
+                diasCredito,
                 activo: true
             };
             
@@ -1186,6 +1273,7 @@
             document.getElementById('precioClienteCamaron').value = '';
             document.getElementById('precioClienteHielo').value = '';
             document.getElementById('librasPorBin').value = '1000';
+            document.getElementById('diasCredito').value = '0';
             
             updateClientSelect();
             displayClients();
@@ -1202,11 +1290,15 @@
                     ? '<span class="status-badge" style="background: #f8d7da; color: #721c24;">Inactivo</span>' 
                     : '<span class="status-badge status-paid">Activo</span>';
                 
+                const diasCredito = client.diasCredito || 0;
+                const creditoText = diasCredito === 0 ? 'Contado' : `${diasCredito} días`;
+                
                 row.innerHTML = `
                     <td><strong>${client.nombre}</strong> ${statusBadge}</td>
                     <td>$${client.precioCamaron.toFixed(3)}/lb</td>
                     <td>$${client.precioHielo.toFixed(3)}/saco</td>
                     <td><strong>${client.librasPorBin || 1000}</strong> lb</td>
+                    <td><strong>${creditoText}</strong></td>
                     <td>
                         ${client.activo !== false 
                             ? `<button class="action-btn" style="background: #007bff; color: white;" data-action="edit" data-index="${index}">✏️</button>
@@ -1242,7 +1334,7 @@
             });
             
             if (window.clients.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px; color: #999;">No hay clientes</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: #999;">No hay clientes</td></tr>';
             }
         }
 
@@ -1293,6 +1385,7 @@
                 document.getElementById('precioClienteCamaron').value = client.precioCamaron.toFixed(3);
                 document.getElementById('precioClienteHielo').value = client.precioHielo.toFixed(3);
                 document.getElementById('librasPorBin').value = client.librasPorBin || 1000;
+                document.getElementById('diasCredito').value = client.diasCredito || 0;
                 
                 if (confirm('Modifica y guarda. ¿Eliminar actual?')) {
                     confirmDeleteClient(index);
