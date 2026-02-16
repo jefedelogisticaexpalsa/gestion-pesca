@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pesca y Hielo - Cloud</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .sync-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .sync-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .sync-offline {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .sync-loading {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-top: 10px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            margin: 2px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .btn-pay {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .summary-card h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .summary-card .amount {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .client-price {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-box h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .login-box p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .google-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+
+        .google-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .google-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(102, 126, 234, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            color: white;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .user-info {
+                position: static;
+                justify-content: center;
+                margin-top: 15px;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                width: 100%;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <h1>🦐 Gestión de Pesca</h1>
+            <p>Inicia sesión para acceder a tus datos en la nube</p>
+            
+            <button id="googleSignInBtn" class="google-btn">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continuar con Google
+            </button>
+
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <p style="font-size: 12px; color: #999; margin-bottom: 10px;">¿No quieres iniciar sesión?</p>
+                <button onclick="useAnonymousMode()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    Usar modo anónimo (solo este dispositivo)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen" style="display: none;">
+        <div class="spinner"></div>
+        <h2>Cargando tus datos...</h2>
+        <p style="margin-top: 10px; opacity: 0.9;">Sincronizando con Firebase</p>
+    </div>
+
+    <!-- Main App -->
+    <div class="container" id="mainContainer" style="display: none;">
+        <div class="header">
+            <div class="user-info" id="userInfo">
+                <img id="userAvatar" class="user-avatar" src="" alt="">
+                <div>
+                    <div id="userName" class="user-name"></div>
+                    <div style="font-size: 11px; color: #999;" id="userEmail"></div>
+                </div>
+                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
+            
+            <h1>🦐 Gestión de Pesca y Hielo</h1>
+            <p>Sistema Cloud con Firebase</p>
+            <div id="syncStatus" class="sync-status sync-loading">⏳ Conectando...</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('nuevo-pedido')">📝 Nuevo Pedido</button>
+            <button class="tab-btn" onclick="showTab('pedidos')">📋 Mis Pedidos</button>
+            <button class="tab-btn" onclick="showTab('clientes')">👥 Clientes</button>
+            <button class="tab-btn" onclick="showTab('resumen')">📊 Resumen</button>
+        </div>
+
+        <div id="nuevo-pedido" class="content active">
+            <h2 style="margin-bottom: 20px; color: #667eea;">Registrar Nuevo Pedido</h2>
+            
+            <div class="form-group">
+                <label>Tipo de Pedido</label>
+                <select id="tipoPedido" onchange="updateFormFields()">
+                    <option value="camaron">🦐 Camarón</option>
+                    <option value="hielo">🧊 Hielo</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Cliente</label>
+                <select id="cliente" onchange="updateClientPrice()">
+                    <option value="">Seleccionar cliente...</option>
+                </select>
+            </div>
+
+            <div id="camaron-fields">
+                <div class="form-group">
+                    <label>Cantidad de Bins (opcional)</label>
+                    <input type="number" id="cantidadBins" placeholder="Ej: 30" oninput="calculateFromBins()">
+                    <small class="client-price">Si ingresas bins, las libras se calcularán automáticamente</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Libras de Camarón</label>
+                    <input type="number" id="libras" step="0.01" placeholder="Ej: 30000" oninput="calculateCommission()">
+                    <div id="binsInfo" class="client-price"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Precio por Libra ($)</label>
+                    <input type="number" id="precioCamaron" step="0.001" placeholder="Ej: 0.055" oninput="calculateCommission()">
+                    <div id="clientPriceCamaron" class="client-price"></div>
+                </div>
+            </div>
+
+            <div id="hielo-fields" style="display: none;">
+                <div class="form-group">
+                    <label>Cantidad de Sacos (50 lb c/u)</label>
+                    <input type="number" id="sacos" placeholder="Ej: 160" oninput="calculateCommission()">
+                </div>
+
+                <div class="form-group">
+                    <label>Precio por Saco ($)</label>
+                    <input type="number" id="precioHielo" step="0.001" placeholder="Ej: 0.600" oninput="calculateCommission()">
+                    <div id="clientPriceHielo" class="client-price"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="fecha">
+            </div>
+
+            <div class="form-group">
+                <label>Notas (Opcional)</label>
+                <textarea id="notas" rows="3" placeholder="Información adicional..."></textarea>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>Total del Pedido:</strong> $<span id="totalPedido">0.00</span><br>
+                <strong>Tu Comisión (1.5%):</strong> $<span id="comisionCalculada">0.00</span>
+            </div>
+
+            <button class="btn" onclick="saveOrder()">💾 Guardar Pedido</button>
+        </div>
+
+        <div id="pedidos" class="content">
+            <h2 style="margin-bottom: 20px; color: #667eea;">Mis Pedidos</h2>
+            
+            <div class="form-group">
+                <label>Filtrar por Estado</label>
+                <select id="filtroEstado" onchange="filterOrders()">
+                    <option value="todos">Todos</option>
+                    <option value="pendiente">Pendientes</option>
+                    <option value="pagado">Pagados</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                            <th>Comisión</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="clientes" class="content">
+            <h2 style="margin-bottom: 20px; color: #667eea;">Gestión de Clientes</h2>
+            
+            <div class="form-group">
+                <label>Nombre del Cliente</label>
+                <input type="text" id="nombreCliente" placeholder="Ej: TPS">
+            </div>
+
+            <div class="two-column">
+                <div class="form-group">
+                    <label>Precio Camarón ($/lb)</label>
+                    <input type="number" id="precioClienteCamaron" step="0.001" placeholder="Ej: 0.055">
+                </div>
+
+                <div class="form-group">
+                    <label>Precio Hielo ($/saco)</label>
+                    <input type="number" id="precioClienteHielo" step="0.001" placeholder="Ej: 0.600">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Libras por Bin</label>
+                <input type="number" id="librasPorBin" placeholder="1000" value="1000">
+                <small class="client-price">Común: 1000 lb/bin o 900 lb/bin</small>
+            </div>
+
+            <button class="btn" onclick="saveClient()">➕ Agregar Cliente</button>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px; color: #333;">Clientes Registrados</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Precio Camarón</th>
+                            <th>Precio Hielo</th>
+                            <th>Lb/Bin</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="resumen" class="content">
+            <h2 style="margin-bottom: 20px; color: #667eea;">Resumen Ejecutivo</h2>
+            
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>💰 Total Comisiones</h3>
+                    <div class="amount">$<span id="totalComisiones">0.00</span></div>
+                </div>
+                <div class="summary-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <h3>⏳ Pendientes de Cobro</h3>
+                    <div class="amount">$<span id="comisionesPendientes">0.00</span></div>
+                </div>
+                <div class="summary-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <h3>✅ Comisiones Cobradas</h3>
+                    <div class="amount">$<span id="comisionesPagadas">0.00</span></div>
+                </div>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <h3>🦐 Total Libras Camarón</h3>
+                    <div class="amount"><span id="totalLibras">0</span> lb</div>
+                </div>
+                <div class="summary-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <h3>🧊 Total Sacos Hielo</h3>
+                    <div class="amount"><span id="totalSacos">0</span> sacos</div>
+                </div>
+                <div class="summary-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+                    <h3>📦 Total Pedidos</h3>
+                    <div class="amount"><span id="totalPedidos">0</span></div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="generateReport()">📄 Generar Reporte para Gerencia</button>
+
+            <div id="reportOutput" style="display: none; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                <h3 style="margin-bottom: 15px;">Reporte Generado</h3>
+                <pre id="reportText" style="white-space: pre-wrap; font-family: monospace; font-size: 14px;"></pre>
+                <button class="btn btn-secondary" onclick="copyReport()">📋 Copiar Reporte</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAzIpGypgd4B1NlwHzPlYRJ7zzfees0SyU",
+            authDomain: "app-libras-hielo.firebaseapp.com",
+            projectId: "app-libras-hielo",
+            storageBucket: "app-libras-hielo.firebasestorage.app",
+            messagingSenderId: "790095487059",
+            appId: "1:790095487059:web:b87f22a9f853d72f0ba6a6"
+        };
+
+        // Initialize Firebase
+        let app, auth, db, currentUser;
+        let clients = [];
+        let orders = [];
+
+        // Initialize Firebase
+        app = firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+
+        // Check authentication state
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                console.log('Usuario autenticado:', user.email);
+                
+                // Update UI with user info
+                document.getElementById('userName').textContent = user.displayName || 'Usuario';
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/40';
+                
+                // Hide login, show loading
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('loadingScreen').style.display = 'flex';
+                
+                // Load data
+                try {
+                    await loadDataFromFirebase();
+                    
+                    // Show main app
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('mainContainer').style.display = 'block';
+                    
+                    document.getElementById('syncStatus').className = 'sync-status sync-online';
+                    document.getElementById('syncStatus').textContent = '🟢 Conectado';
+                    
+                    updateClientSelect();
+                    displayOrders();
+                    displayClients();
+                    updateSummary();
+                    initForm();
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                    alert('Error al cargar datos: ' + error.message);
+                }
+            } else {
+                // User is signed out
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainContainer').style.display = 'none';
+            }
+        });
+
+        // Google Sign In
+        document.getElementById('googleSignInBtn').addEventListener('click', async () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                await auth.signInWithPopup(provider);
+            } catch (error) {
+                console.error('Error signing in:', error);
+                alert('Error al iniciar sesión: ' + error.message);
+            }
+        });
+
+        // Logout
+        async function logout() {
+            if (confirm('¿Cerrar sesión?')) {
+                try {
+                    await auth.signOut();
+                } catch (error) {
+                    console.error('Error signing out:', error);
+                    alert('Error al cerrar sesión: ' + error.message);
+                }
+            }
+        }
+
+        // Anonymous mode
+        function useAnonymousMode() {
+            if (confirm('En modo anónimo, tus datos solo se guardarán en este navegador.\n\n¿Continuar?')) {
+                window.location.href = 'gestion-pesca-final.html';
+            }
+        }
+
+        // Load data from Firebase
+        async function loadDataFromFirebase() {
+            if (!currentUser) return;
+            
+            console.log('Cargando datos desde Firebase...');
+            
+            try {
+                // Load clients
+                const clientsSnapshot = await db.collection('users').doc(currentUser.uid).collection('clients').get();
+                clients = clientsSnapshot.docs.map(doc => ({
+                    firebaseId: doc.id,
+                    ...doc.data()
+                }));
+                console.log('Clientes cargados:', clients.length);
+
+                // Load orders
+                const ordersSnapshot = await db.collection('users').doc(currentUser.uid).collection('orders').get();
+                orders = ordersSnapshot.docs.map(doc => ({
+                    firebaseId: doc.id,
+                    ...doc.data()
+                }));
+                console.log('Pedidos cargados:', orders.length);
+            } catch (error) {
+                console.error('Error loading from Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Save data to Firebase
+        async function saveDataToFirebase() {
+            if (!currentUser) {
+                alert('No estás autenticado');
+                return;
+            }
+
+            try {
+                console.log('Guardando en Firebase...');
+                document.getElementById('syncStatus').textContent = '⏳ Sincronizando...';
+
+                const batch = db.batch();
+
+                // Save clients
+                for (const client of clients) {
+                    const clientId = client.firebaseId || db.collection('users').doc(currentUser.uid).collection('clients').doc().id;
+                    client.firebaseId = clientId;
+                    const clientRef = db.collection('users').doc(currentUser.uid).collection('clients').doc(clientId);
+                    batch.set(clientRef, client);
+                }
+
+                // Save orders
+                for (const order of orders) {
+                    const orderId = order.firebaseId || db.collection('users').doc(currentUser.uid).collection('orders').doc().id;
+                    order.firebaseId = orderId;
+                    const orderRef = db.collection('users').doc(currentUser.uid).collection('orders').doc(orderId);
+                    batch.set(orderRef, order);
+                }
+
+                await batch.commit();
+
+                console.log('✅ Datos guardados');
+                document.getElementById('syncStatus').className = 'sync-status sync-online';
+                document.getElementById('syncStatus').textContent = '🟢 Sincronizado';
+                
+            } catch (error) {
+                console.error('Error saving:', error);
+                document.getElementById('syncStatus').className = 'sync-status sync-offline';
+                document.getElementById('syncStatus').textContent = '⚠️ Error al sincronizar';
+                alert('Error al guardar: ' + error.message);
+            }
+        }
+
+        // Delete from Firebase
+        async function deleteFromFirebase(collection_name, firebaseId) {
+            if (!currentUser) return;
+            
+            try {
+                await db.collection('users').doc(currentUser.uid).collection(collection_name).doc(firebaseId).delete();
+                console.log('Eliminado de Firebase:', firebaseId);
+            } catch (error) {
+                console.error('Error deleting:', error);
+            }
+        }
+
+        // Export to global scope
+        window.clients = clients;
+        window.orders = orders;
+        window.saveDataToFirebase = saveDataToFirebase;
+        window.deleteFromFirebase = deleteFromFirebase;
+    </script>
+
+    <script src="gestion-pesca-final.html" style="display:none"></script>
+    <script>
+        // All the app logic from gestion-pesca-final.html
+        // (I'll include the essential functions inline to make it work)
+        
+        function showTab(tabId) {
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabId === 'resumen') {
+                updateSummary();
+            }
+        }
+
+        function initForm() {
+            document.getElementById('fecha').valueAsDate = new Date();
+        }
+
+        function calculateFromBins() {
+            const bins = parseFloat(document.getElementById('cantidadBins').value) || 0;
+            const clientIndex = document.getElementById('cliente').value;
+            
+            if (bins > 0 && clientIndex !== '') {
+                const client = window.clients[clientIndex];
+                const librasPorBin = client.librasPorBin || 1000;
+                const totalLibras = bins * librasPorBin;
+                
+                document.getElementById('libras').value = totalLibras;
+                document.getElementById('binsInfo').textContent = 
+                    `${bins} bins × ${librasPorBin} lb/bin = ${totalLibras.toLocaleString()} libras`;
+                
+                calculateCommission();
+            }
+        }
+
+        function updateFormFields() {
+            const tipo = document.getElementById('tipoPedido').value;
+            const camaronFields = document.getElementById('camaron-fields');
+            const hieloFields = document.getElementById('hielo-fields');
+            
+            if (tipo === 'camaron') {
+                camaronFields.style.display = 'block';
+                hieloFields.style.display = 'none';
+            } else {
+                camaronFields.style.display = 'none';
+                hieloFields.style.display = 'block';
+            }
+            
+            updateClientPrice();
+            calculateCommission();
+        }
+
+        function updateClientSelect() {
+            const select = document.getElementById('cliente');
+            select.innerHTML = '<option value="">Seleccionar cliente...</option>';
+            
+            window.clients.forEach((client, index) => {
+                if (client.activo !== false) {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = client.nombre;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function updateClientPrice() {
+            const clientIndex = document.getElementById('cliente').value;
+            const tipo = document.getElementById('tipoPedido').value;
+            
+            if (clientIndex !== '') {
+                const client = window.clients[clientIndex];
+                
+                if (tipo === 'camaron') {
+                    document.getElementById('precioCamaron').value = client.precioCamaron.toFixed(3);
+                    document.getElementById('clientPriceCamaron').textContent = 
+                        `Precio: $${client.precioCamaron.toFixed(3)}/lb | ${client.librasPorBin || 1000} lb/bin`;
+                } else {
+                    document.getElementById('precioHielo').value = client.precioHielo.toFixed(3);
+                    document.getElementById('clientPriceHielo').textContent = 
+                        `Precio: $${client.precioHielo.toFixed(3)}/saco`;
+                }
+                
+                calculateCommission();
+            }
+        }
+
+        function calculateCommission() {
+            const tipo = document.getElementById('tipoPedido').value;
+            let total = 0;
+            
+            if (tipo === 'camaron') {
+                const libras = parseFloat(document.getElementById('libras').value) || 0;
+                const precio = parseFloat(document.getElementById('precioCamaron').value) || 0;
+                total = libras * precio;
+            } else {
+                const sacos = parseFloat(document.getElementById('sacos').value) || 0;
+                const precio = parseFloat(document.getElementById('precioHielo').value) || 0;
+                total = sacos * precio;
+            }
+            
+            const comision = total * 0.015;
+            
+            document.getElementById('totalPedido').textContent = total.toFixed(2);
+            document.getElementById('comisionCalculada').textContent = comision.toFixed(2);
+        }
+
+        async function saveOrder() {
+            const clientIndex = document.getElementById('cliente').value;
+            const tipo = document.getElementById('tipoPedido').value;
+            const fecha = document.getElementById('fecha').value;
+            const notas = document.getElementById('notas').value;
+            
+            if (clientIndex === '') {
+                alert('Selecciona un cliente');
+                return;
+            }
+            
+            if (!fecha) {
+                alert('Selecciona una fecha');
+                return;
+            }
+            
+            const client = window.clients[clientIndex];
+            let cantidad, precio, total;
+            
+            if (tipo === 'camaron') {
+                cantidad = parseFloat(document.getElementById('libras').value) || 0;
+                precio = parseFloat(document.getElementById('precioCamaron').value) || 0;
+                
+                if (cantidad <= 0 || precio <= 0) {
+                    alert('Ingresa libras y precio');
+                    return;
+                }
+                
+                if (precio !== client.precioCamaron) {
+                    client.precioCamaron = precio;
+                }
+            } else {
+                cantidad = parseFloat(document.getElementById('sacos').value) || 0;
+                precio = parseFloat(document.getElementById('precioHielo').value) || 0;
+                
+                if (cantidad <= 0 || precio <= 0) {
+                    alert('Ingresa sacos y precio');
+                    return;
+                }
+                
+                if (precio !== client.precioHielo) {
+                    client.precioHielo = precio;
+                }
+            }
+            
+            total = cantidad * precio;
+            const comision = total * 0.015;
+            
+            const order = {
+                id: Date.now(),
+                fecha,
+                cliente: client.nombre,
+                tipo,
+                cantidad,
+                precio,
+                total,
+                comision,
+                estado: 'pendiente',
+                notas
+            };
+            
+            window.orders.push(order);
+            await window.saveDataToFirebase();
+            
+            // Clear form
+            document.getElementById('tipoPedido').value = 'camaron';
+            document.getElementById('cliente').value = '';
+            document.getElementById('cantidadBins').value = '';
+            document.getElementById('libras').value = '';
+            document.getElementById('precioCamaron').value = '';
+            document.getElementById('sacos').value = '';
+            document.getElementById('precioHielo').value = '';
+            document.getElementById('fecha').valueAsDate = new Date();
+            document.getElementById('notas').value = '';
+            document.getElementById('clientPriceCamaron').textContent = '';
+            document.getElementById('clientPriceHielo').textContent = '';
+            document.getElementById('binsInfo').textContent = '';
+            
+            updateFormFields();
+            calculateCommission();
+            
+            alert('✅ Pedido guardado');
+            displayOrders();
+            updateSummary();
+        }
+
+        function displayOrders() {
+            const tbody = document.getElementById('ordersBody');
+            const filtro = document.getElementById('filtroEstado')?.value || 'todos';
+            
+            let filteredOrders = window.orders;
+            if (filtro !== 'todos') {
+                filteredOrders = window.orders.filter(o => o.estado === filtro);
+            }
+            
+            tbody.innerHTML = '';
+            filteredOrders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            filteredOrders.forEach(order => {
+                const row = tbody.insertRow();
+                
+                const cantidadText = order.tipo === 'camaron' 
+                    ? `${order.cantidad.toFixed(2)} lb` 
+                    : `${order.cantidad} sacos`;
+                
+                const statusClass = order.estado === 'pagado' ? 'status-paid' : 'status-pending';
+                const statusText = order.estado === 'pagado' ? 'Pagado' : 'Pendiente';
+                
+                row.innerHTML = `
+                    <td>${order.fecha}</td>
+                    <td>${order.cliente}</td>
+                    <td>${order.tipo === 'camaron' ? '🦐 Camarón' : '🧊 Hielo'}</td>
+                    <td>${cantidadText}</td>
+                    <td>$${order.total.toFixed(2)}</td>
+                    <td><strong>$${order.comision.toFixed(2)}</strong></td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        ${order.estado === 'pendiente' 
+                            ? `<button class="action-btn btn-pay" data-action="pay" data-id="${order.id}">✓</button>`
+                            : '<span style="color: #28a745;">✓</span>'}
+                        <button class="action-btn btn-delete" data-action="delete" data-id="${order.id}">✕</button>
+                    </td>
+                `;
+            });
+            
+            const buttons = tbody.querySelectorAll('button[data-action]');
+            buttons.forEach(button => {
+                button.addEventListener('click', async function() {
+                    const action = this.getAttribute('data-action');
+                    const orderId = parseInt(this.getAttribute('data-id'));
+                    
+                    if (action === 'pay') {
+                        await markAsPaid(orderId);
+                    } else if (action === 'delete') {
+                        await deleteOrder(orderId);
+                    }
+                });
+            });
+            
+            if (filteredOrders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 30px; color: #999;">No hay pedidos</td></tr>';
+            }
+        }
+
+        function filterOrders() {
+            displayOrders();
+        }
+
+        async function markAsPaid(orderId) {
+            const order = window.orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            if (confirm(`¿Cobrada?\nCliente: ${order.cliente}\nComisión: $${order.comision.toFixed(2)}`)) {
+                order.estado = 'pagado';
+                await window.saveDataToFirebase();
+                displayOrders();
+                updateSummary();
+                alert('✅ Marcado como cobrado');
+            }
+        }
+
+        async function deleteOrder(orderId) {
+            const order = window.orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            if (confirm(`¿Eliminar pedido?\n${order.cliente} - $${order.comision.toFixed(2)}`)) {
+                window.orders = window.orders.filter(o => o.id !== orderId);
+                if (order.firebaseId) {
+                    await window.deleteFromFirebase('orders', order.firebaseId);
+                }
+                await window.saveDataToFirebase();
+                displayOrders();
+                updateSummary();
+                alert('✅ Eliminado');
+            }
+        }
+
+        async function saveClient() {
+            const nombre = document.getElementById('nombreCliente').value.trim();
+            const precioCamaron = parseFloat(document.getElementById('precioClienteCamaron').value) || 0;
+            const precioHielo = parseFloat(document.getElementById('precioClienteHielo').value) || 0;
+            const librasPorBin = parseFloat(document.getElementById('librasPorBin').value) || 1000;
+            
+            if (!nombre) {
+                alert('Ingresa el nombre');
+                return;
+            }
+            
+            if (precioCamaron <= 0 && precioHielo <= 0) {
+                alert('Ingresa al menos un precio');
+                return;
+            }
+            
+            const client = {
+                nombre,
+                precioCamaron,
+                precioHielo,
+                librasPorBin,
+                activo: true
+            };
+            
+            window.clients.push(client);
+            await window.saveDataToFirebase();
+            
+            document.getElementById('nombreCliente').value = '';
+            document.getElementById('precioClienteCamaron').value = '';
+            document.getElementById('precioClienteHielo').value = '';
+            document.getElementById('librasPorBin').value = '1000';
+            
+            updateClientSelect();
+            displayClients();
+            alert('✅ Cliente agregado');
+        }
+
+        function displayClients() {
+            const tbody = document.getElementById('clientsBody');
+            tbody.innerHTML = '';
+            
+            window.clients.forEach((client, index) => {
+                const row = tbody.insertRow();
+                const statusBadge = client.activo === false 
+                    ? '<span class="status-badge" style="background: #f8d7da; color: #721c24;">Inactivo</span>' 
+                    : '<span class="status-badge status-paid">Activo</span>';
+                
+                row.innerHTML = `
+                    <td><strong>${client.nombre}</strong> ${statusBadge}</td>
+                    <td>$${client.precioCamaron.toFixed(3)}/lb</td>
+                    <td>$${client.precioHielo.toFixed(3)}/saco</td>
+                    <td><strong>${client.librasPorBin || 1000}</strong> lb</td>
+                    <td>
+                        ${client.activo !== false 
+                            ? `<button class="action-btn" style="background: #007bff; color: white;" data-action="edit" data-index="${index}">✏️</button>
+                               <button class="action-btn" style="background: #ffc107; color: #000;" data-action="deactivate" data-index="${index}">⏸️</button>`
+                            : `<button class="action-btn" style="background: #28a745; color: white;" data-action="reactivate" data-index="${index}">✅</button>`
+                        }
+                        <button class="action-btn btn-delete" data-action="delete" data-index="${index}">🗑️</button>
+                    </td>
+                `;
+            });
+            
+            const buttons = tbody.querySelectorAll('button[data-action]');
+            buttons.forEach(button => {
+                button.addEventListener('click', async function() {
+                    const action = this.getAttribute('data-action');
+                    const index = parseInt(this.getAttribute('data-index'));
+                    
+                    switch(action) {
+                        case 'edit':
+                            editClient(index);
+                            break;
+                        case 'delete':
+                            await confirmDeleteClient(index);
+                            break;
+                        case 'deactivate':
+                            await deactivateClient(index);
+                            break;
+                        case 'reactivate':
+                            await reactivateClient(index);
+                            break;
+                    }
+                });
+            });
+            
+            if (window.clients.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px; color: #999;">No hay clientes</td></tr>';
+            }
+        }
+
+        async function deactivateClient(index) {
+            const client = window.clients[index];
+            if (confirm(`¿Desactivar "${client.nombre}"?`)) {
+                window.clients[index].activo = false;
+                await window.saveDataToFirebase();
+                displayClients();
+                alert('⏸️ Desactivado');
+            }
+        }
+
+        async function reactivateClient(index) {
+            const client = window.clients[index];
+            if (confirm(`¿Reactivar "${client.nombre}"?`)) {
+                window.clients[index].activo = true;
+                await window.saveDataToFirebase();
+                updateClientSelect();
+                displayClients();
+                alert('✅ Reactivado');
+            }
+        }
+
+        async function confirmDeleteClient(index) {
+            const client = window.clients[index];
+            if (confirm(`¿Eliminar "${client.nombre}"?`)) {
+                const firebaseId = client.firebaseId;
+                window.clients.splice(index, 1);
+                if (firebaseId) {
+                    await window.deleteFromFirebase('clients', firebaseId);
+                }
+                await window.saveDataToFirebase();
+                updateClientSelect();
+                displayClients();
+                alert('✅ Eliminado');
+            }
+        }
+
+        function editClient(index) {
+            const client = window.clients[index];
+            
+            if (confirm(`¿Editar "${client.nombre}"?`)) {
+                showTab('clientes');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                document.getElementById('nombreCliente').value = client.nombre;
+                document.getElementById('precioClienteCamaron').value = client.precioCamaron.toFixed(3);
+                document.getElementById('precioClienteHielo').value = client.precioHielo.toFixed(3);
+                document.getElementById('librasPorBin').value = client.librasPorBin || 1000;
+                
+                if (confirm('Modifica y guarda. ¿Eliminar actual?')) {
+                    confirmDeleteClient(index);
+                }
+            }
+        }
+
+        function updateSummary() {
+            const totalComisiones = window.orders.reduce((sum, o) => sum + o.comision, 0);
+            const comisionesPendientes = window.orders.filter(o => o.estado === 'pendiente').reduce((sum, o) => sum + o.comision, 0);
+            const comisionesPagadas = window.orders.filter(o => o.estado === 'pagado').reduce((sum, o) => sum + o.comision, 0);
+            
+            const totalLibras = window.orders.filter(o => o.tipo === 'camaron').reduce((sum, o) => sum + o.cantidad, 0);
+            const totalSacos = window.orders.filter(o => o.tipo === 'hielo').reduce((sum, o) => sum + o.cantidad, 0);
+            
+            document.getElementById('totalComisiones').textContent = totalComisiones.toFixed(2);
+            document.getElementById('comisionesPendientes').textContent = comisionesPendientes.toFixed(2);
+            document.getElementById('comisionesPagadas').textContent = comisionesPagadas.toFixed(2);
+            document.getElementById('totalLibras').textContent = totalLibras.toFixed(2);
+            document.getElementById('totalSacos').textContent = totalSacos;
+            document.getElementById('totalPedidos').textContent = window.orders.length;
+        }
+
+        function generateReport() {
+            const totalComisiones = window.orders.reduce((sum, o) => sum + o.comision, 0);
+            const comisionesPendientes = window.orders.filter(o => o.estado === 'pendiente').reduce((sum, o) => sum + o.comision, 0);
+            const comisionesPagadas = window.orders.filter(o => o.estado === 'pagado').reduce((sum, o) => sum + o.comision, 0);
+            
+            const totalLibras = window.orders.filter(o => o.tipo === 'camaron').reduce((sum, o) => sum + o.cantidad, 0);
+            const totalSacos = window.orders.filter(o => o.tipo === 'hielo').reduce((sum, o) => sum + o.cantidad, 0);
+            
+            const pedidosCamaron = window.orders.filter(o => o.tipo === 'camaron').length;
+            const pedidosHielo = window.orders.filter(o => o.tipo === 'hielo').length;
+            
+            const pendientes = window.orders.filter(o => o.estado === 'pendiente');
+            
+            const report = `*📊 REPORTE DE COMISIONES*
+_Fecha: ${new Date().toLocaleDateString('es-ES')}_
+
+*RESUMEN GENERAL*
+📦 Total Pedidos: ${window.orders.length}
+  🦐 Camarón: ${pedidosCamaron} pedidos
+  🧊 Hielo: ${pedidosHielo} pedidos
+
+*COMISIONES (1.5%)*
+💰 Total Generado: *$${totalComisiones.toFixed(2)}*
+⏳ Pendientes: $${comisionesPendientes.toFixed(2)}
+✅ Pagadas: $${comisionesPagadas.toFixed(2)}
+
+*VOLUMEN DE VENTAS*
+🦐 Camarón: ${totalLibras.toFixed(2)} lb
+🧊 Hielo: ${totalSacos} sacos (${(totalSacos * 50).toLocaleString()} lb)
+
+${pendientes.length > 0 ? `*PENDIENTES DE COBRO*
+${pendientes.map(o => 
+`• ${o.fecha} | ${o.cliente}
+  ${o.tipo === 'camaron' ? '🦐' : '🧊'} ${o.tipo === 'camaron' ? o.cantidad.toFixed(2) + ' lb' : o.cantidad + ' sacos'} → *$${o.comision.toFixed(2)}*`
+).join('\n')}
+
+*TOTAL A PAGAR: $${comisionesPendientes.toFixed(2)}*` : '_No hay comisiones pendientes_ ✅'}
+
+━━━━━━━━━━━━━━━━━
+_Sistema de Gestión de Pesca_`;
+            
+            document.getElementById('reportText').textContent = report;
+            document.getElementById('reportOutput').style.display = 'block';
+        }
+
+        function copyReport() {
+            const reportText = document.getElementById('reportText').textContent;
+            navigator.clipboard.writeText(reportText).then(() => {
+                alert('✅ Copiado');
+            });
+        }
+    </script>
+</body>
+</html>
