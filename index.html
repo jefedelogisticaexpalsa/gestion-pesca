@@ -707,52 +707,58 @@
         };
 
         // Initialize Firebase
-        let app, auth, db, currentUser;
+        let auth, db, currentUser;
         let clients = [];
         let orders = [];
 
-        // Initialize Firebase
-        app = firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.firestore();
+
+        // Helper: reference to user's document
+        function uRef() {
+            return db.collection('users').doc(currentUser.uid);
+        }
 
         // Check authentication state
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
-                console.log('Usuario autenticado:', user.email);
-                
-                // Update UI with user info
+                console.log('✅ Usuario autenticado:', user.email, '| UID:', user.uid);
+
                 document.getElementById('userName').textContent = user.displayName || 'Usuario';
                 document.getElementById('userEmail').textContent = user.email;
-                document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/40';
-                
-                // Hide login, show loading
+                document.getElementById('userAvatar').src = user.photoURL || '';
+
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('loadingScreen').style.display = 'flex';
-                
-                // Load data
+
                 try {
                     await loadDataFromFirebase();
-                    
-                    // Show main app
+
                     document.getElementById('loadingScreen').style.display = 'none';
                     document.getElementById('mainContainer').style.display = 'block';
-                    
+
                     document.getElementById('syncStatus').className = 'sync-status sync-online';
                     document.getElementById('syncStatus').textContent = '🟢 Conectado';
-                    
+
+                    window.clients = clients;
+                    window.orders = orders;
+
                     updateClientSelect();
                     displayOrders();
                     displayClients();
                     updateSummary();
                     initForm();
                 } catch (error) {
-                    console.error('Error loading data:', error);
+                    console.error('❌ Error al cargar datos:', error);
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('mainContainer').style.display = 'block';
+                    document.getElementById('syncStatus').className = 'sync-status sync-offline';
+                    document.getElementById('syncStatus').textContent = '⚠️ Error de conexión';
                     alert('Error al cargar datos: ' + error.message);
                 }
             } else {
-                // User is signed out
                 document.getElementById('loginScreen').style.display = 'flex';
                 document.getElementById('loadingScreen').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'none';
@@ -773,117 +779,127 @@
         // Logout
         async function logout() {
             if (confirm('¿Cerrar sesión?')) {
-                try {
-                    await auth.signOut();
-                } catch (error) {
-                    console.error('Error signing out:', error);
-                    alert('Error al cerrar sesión: ' + error.message);
-                }
+                await auth.signOut();
             }
         }
 
         // Anonymous mode
         function useAnonymousMode() {
-            if (confirm('En modo anónimo, tus datos solo se guardarán en este navegador.\n\n¿Continuar?')) {
+            if (confirm('En modo anónimo los datos solo se guardan en este navegador.\n\n¿Continuar?')) {
                 window.location.href = 'gestion-pesca-final.html';
             }
         }
 
-        // Load data from Firebase
+        // =============================================
+        // LOAD from Firebase
+        // =============================================
         async function loadDataFromFirebase() {
-            if (!currentUser) return;
-            
-            console.log('Cargando datos desde Firebase...');
-            
-            try {
-                // Load clients
-                const clientsSnapshot = await db.collection('users').doc(currentUser.uid).collection('clients').get();
-                clients = clientsSnapshot.docs.map(doc => ({
-                    firebaseId: doc.id,
-                    ...doc.data()
-                }));
-                console.log('Clientes cargados:', clients.length);
+            console.log('📥 Cargando desde Firebase... UID:', currentUser.uid);
 
-                // Load orders
-                const ordersSnapshot = await db.collection('users').doc(currentUser.uid).collection('orders').get();
-                orders = ordersSnapshot.docs.map(doc => ({
-                    firebaseId: doc.id,
-                    ...doc.data()
-                }));
-                console.log('Pedidos cargados:', orders.length);
+            // Ensure user document exists with merge
+            await uRef().set({
+                email: currentUser.email,
+                displayName: currentUser.displayName,
+                lastLogin: new Date().toISOString()
+            }, { merge: true });
+
+            // Load clients
+            const cSnap = await uRef().collection('clients').get();
+            clients = [];
+            cSnap.forEach(doc => clients.push({ firebaseId: doc.id, ...doc.data() }));
+            window.clients = clients;
+            console.log('✅ Clientes:', clients.length);
+
+            // Load orders
+            const oSnap = await uRef().collection('orders').get();
+            orders = [];
+            oSnap.forEach(doc => orders.push({ firebaseId: doc.id, ...doc.data() }));
+            window.orders = orders;
+            console.log('✅ Pedidos:', orders.length);
+        }
+
+        // =============================================
+        // SAVE one client to Firebase
+        // =============================================
+        async function saveClientToFirebase(client) {
+            document.getElementById('syncStatus').textContent = '⏳ Guardando...';
+            try {
+                let docRef;
+                if (client.firebaseId) {
+                    docRef = uRef().collection('clients').doc(client.firebaseId);
+                } else {
+                    docRef = uRef().collection('clients').doc();
+                    client.firebaseId = docRef.id;
+                }
+                await docRef.set(client);
+                console.log('✅ Cliente guardado:', client.nombre, '| ID:', client.firebaseId);
+                document.getElementById('syncStatus').className = 'sync-status sync-online';
+                document.getElementById('syncStatus').textContent = '🟢 Sincronizado';
             } catch (error) {
-                console.error('Error loading from Firebase:', error);
+                console.error('❌ Error guardando cliente:', error);
+                document.getElementById('syncStatus').className = 'sync-status sync-offline';
+                document.getElementById('syncStatus').textContent = '⚠️ Error';
                 throw error;
             }
         }
 
-        // Save data to Firebase
-        async function saveDataToFirebase() {
-            if (!currentUser) {
-                alert('No estás autenticado');
-                return;
-            }
-
+        // =============================================
+        // SAVE one order to Firebase
+        // =============================================
+        async function saveOrderToFirebase(order) {
+            document.getElementById('syncStatus').textContent = '⏳ Guardando...';
             try {
-                console.log('Guardando en Firebase...');
-                document.getElementById('syncStatus').textContent = '⏳ Sincronizando...';
-
-                const batch = db.batch();
-
-                // Save clients
-                for (const client of clients) {
-                    const clientId = client.firebaseId || db.collection('users').doc(currentUser.uid).collection('clients').doc().id;
-                    client.firebaseId = clientId;
-                    const clientRef = db.collection('users').doc(currentUser.uid).collection('clients').doc(clientId);
-                    batch.set(clientRef, client);
+                let docRef;
+                if (order.firebaseId) {
+                    docRef = uRef().collection('orders').doc(order.firebaseId);
+                } else {
+                    docRef = uRef().collection('orders').doc();
+                    order.firebaseId = docRef.id;
                 }
-
-                // Save orders
-                for (const order of orders) {
-                    const orderId = order.firebaseId || db.collection('users').doc(currentUser.uid).collection('orders').doc().id;
-                    order.firebaseId = orderId;
-                    const orderRef = db.collection('users').doc(currentUser.uid).collection('orders').doc(orderId);
-                    batch.set(orderRef, order);
-                }
-
-                await batch.commit();
-
-                console.log('✅ Datos guardados');
+                await docRef.set(order);
+                console.log('✅ Pedido guardado | ID:', order.firebaseId);
                 document.getElementById('syncStatus').className = 'sync-status sync-online';
                 document.getElementById('syncStatus').textContent = '🟢 Sincronizado';
-                
             } catch (error) {
-                console.error('Error saving:', error);
+                console.error('❌ Error guardando pedido:', error);
                 document.getElementById('syncStatus').className = 'sync-status sync-offline';
-                document.getElementById('syncStatus').textContent = '⚠️ Error al sincronizar';
-                alert('Error al guardar: ' + error.message);
+                document.getElementById('syncStatus').textContent = '⚠️ Error';
+                throw error;
             }
         }
 
-        // Delete from Firebase
-        async function deleteFromFirebase(collection_name, firebaseId) {
-            if (!currentUser) return;
-            
+        // =============================================
+        // DELETE from Firebase
+        // =============================================
+        async function deleteFromFirebase(colName, firebaseId) {
+            if (!currentUser || !firebaseId) return;
             try {
-                await db.collection('users').doc(currentUser.uid).collection(collection_name).doc(firebaseId).delete();
-                console.log('Eliminado de Firebase:', firebaseId);
+                await uRef().collection(colName).doc(firebaseId).delete();
+                console.log('🗑️ Eliminado:', colName, firebaseId);
             } catch (error) {
-                console.error('Error deleting:', error);
+                console.error('❌ Error eliminando:', error);
             }
         }
 
-        // Export to global scope
+        // Legacy wrapper (keeps compatibility with rest of code)
+        async function saveDataToFirebase() {
+            for (const client of clients) {
+                await saveClientToFirebase(client);
+            }
+            for (const order of orders) {
+                await saveOrderToFirebase(order);
+            }
+        }
+
         window.clients = clients;
         window.orders = orders;
         window.saveDataToFirebase = saveDataToFirebase;
+        window.saveClientToFirebase = saveClientToFirebase;
+        window.saveOrderToFirebase = saveOrderToFirebase;
         window.deleteFromFirebase = deleteFromFirebase;
     </script>
 
-    <script src="gestion-pesca-final.html" style="display:none"></script>
     <script>
-        // All the app logic from gestion-pesca-final.html
-        // (I'll include the essential functions inline to make it work)
-        
         function showTab(tabId) {
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
@@ -1055,7 +1071,7 @@
             };
             
             window.orders.push(order);
-            await window.saveDataToFirebase();
+            await window.saveOrderToFirebase(order);
             
             // Clear form
             document.getElementById('tipoPedido').value = 'camaron';
@@ -1201,7 +1217,7 @@
             order.fechaPago = fechaPagoDate.toISOString().split('T')[0];
             order.diasCredito = diasCredito;
             
-            await window.saveDataToFirebase();
+            await window.saveOrderToFirebase(order);
             displayOrders();
             
             alert(`✅ Factura registrada\n\nFecha factura: ${fechaFactura}\nDías crédito: ${diasCredito}\nFecha pago: ${order.fechaPago}`);
@@ -1217,7 +1233,7 @@
             
             if (confirm(`¿Cobrada?\nCliente: ${order.cliente}\nComisión: $${order.comision.toFixed(2)}`)) {
                 order.estado = 'pagado';
-                await window.saveDataToFirebase();
+                await window.saveOrderToFirebase(order);
                 displayOrders();
                 updateSummary();
                 alert('✅ Marcado como cobrado');
@@ -1233,7 +1249,6 @@
                 if (order.firebaseId) {
                     await window.deleteFromFirebase('orders', order.firebaseId);
                 }
-                await window.saveDataToFirebase();
                 displayOrders();
                 updateSummary();
                 alert('✅ Eliminado');
@@ -1267,7 +1282,7 @@
             };
             
             window.clients.push(client);
-            await window.saveDataToFirebase();
+            await window.saveClientToFirebase(client);
             
             document.getElementById('nombreCliente').value = '';
             document.getElementById('precioClienteCamaron').value = '';
@@ -1342,7 +1357,7 @@
             const client = window.clients[index];
             if (confirm(`¿Desactivar "${client.nombre}"?`)) {
                 window.clients[index].activo = false;
-                await window.saveDataToFirebase();
+                await window.saveClientToFirebase(window.clients[index]);
                 displayClients();
                 alert('⏸️ Desactivado');
             }
@@ -1352,7 +1367,7 @@
             const client = window.clients[index];
             if (confirm(`¿Reactivar "${client.nombre}"?`)) {
                 window.clients[index].activo = true;
-                await window.saveDataToFirebase();
+                await window.saveClientToFirebase(window.clients[index]);
                 updateClientSelect();
                 displayClients();
                 alert('✅ Reactivado');
@@ -1367,7 +1382,6 @@
                 if (firebaseId) {
                     await window.deleteFromFirebase('clients', firebaseId);
                 }
-                await window.saveDataToFirebase();
                 updateClientSelect();
                 displayClients();
                 alert('✅ Eliminado');
