@@ -431,6 +431,168 @@
                 grid-template-columns: 1fr;
             }
         }
+    
+        /* Modal para editar pedidos */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .modal-header h3 {
+            color: #667eea;
+            font-size: 22px;
+        }
+        .close-modal {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .filters-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .filter-group select,
+        .filter-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .btn-export {
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .btn-export:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        .client-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .client-summary-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+        .client-summary-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        .client-summary-card h4 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+        .client-summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 14px;
+            color: #333;
+        }
+        .client-summary-item strong {
+            color: #667eea;
+        }
+        .date-filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .date-filter-section h3 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .date-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+        .btn-filter {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-clear-filter {
+            background: #6c757d;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -562,14 +724,50 @@
         <div id="pedidos" class="content">
             <h2 style="margin-bottom: 20px; color: #667eea;">Mis Pedidos</h2>
             
-            <div class="form-group">
-                <label>Filtrar por Estado</label>
-                <select id="filtroEstado" onchange="filterOrders()">
-                    <option value="todos">Todos</option>
-                    <option value="pendiente">Pendientes</option>
-                    <option value="pagado">Pagados</option>
-                    <option value="vencido">Vencidos</option>
-                </select>
+            <button class="btn-export" onclick="exportToExcel()">
+                📊 Exportar a Excel
+            </button>
+            
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label>Estado</label>
+                    <select id="filtroEstado" onchange="filterOrders()">
+                        <option value="todos">Todos</option>
+                        <option value="pendiente">Pendientes</option>
+                        <option value="pagado">Pagados</option>
+                        <option value="vencido">Vencidos</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Cliente</label>
+                    <select id="filtroCliente" onchange="filterOrders()">
+                        <option value="todos">Todos</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Tipo</label>
+                    <select id="filtroTipo" onchange="filterOrders()">
+                        <option value="todos">Todos</option>
+                        <option value="camaron">🦐 Camarón</option>
+                        <option value="hielo">🧊 Hielo</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Desde Fecha</label>
+                    <input type="date" id="filtroFechaDesde" onchange="filterOrders()">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Hasta Fecha</label>
+                    <input type="date" id="filtroFechaHasta" onchange="filterOrders()">
+                </div>
+                
+                <div class="filter-group" style="align-self: end;">
+                    <button class="btn-clear-filter" onclick="clearFilters()">🔄 Limpiar Filtros</button>
+                </div>
             </div>
 
             <div class="table-container">
@@ -650,6 +848,23 @@
         <div id="resumen" class="content">
             <h2 style="margin-bottom: 20px; color: #667eea;">Resumen Ejecutivo</h2>
             
+            <!-- Filtro de fechas -->
+            <div class="date-filter-section">
+                <h3>📅 Filtro por Rango de Fechas</h3>
+                <div class="date-inputs">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Desde</label>
+                        <input type="date" id="resumenFechaDesde">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Hasta</label>
+                        <input type="date" id="resumenFechaHasta">
+                    </div>
+                    <button class="btn-filter" onclick="updateSummary()">🔍 Aplicar Filtro</button>
+                    <button class="btn-clear-filter" onclick="clearSummaryFilter()">🔄 Limpiar</button>
+                </div>
+            </div>
+            
             <div class="summary-grid">
                 <div class="summary-card">
                     <h3>💰 Total Comisiones</h3>
@@ -679,14 +894,86 @@
                     <div class="amount"><span id="totalPedidos">0</span></div>
                 </div>
             </div>
+            
+            <!-- Resumen por Cliente -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px; color: #333;">📊 Resumen por Cliente</h3>
+            <div id="clientSummaryContainer" class="client-summary-grid"></div>
 
             <button class="btn" onclick="generateReport()">📄 Generar Reporte para Gerencia</button>
+
+                        <button class="btn" onclick="generateReport()">📄 Generar Reporte para Gerencia</button>
 
             <div id="reportOutput" style="display: none; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
                 <h3 style="margin-bottom: 15px;">Reporte Generado</h3>
                 <pre id="reportText" style="white-space: pre-wrap; font-family: monospace; font-size: 14px;"></pre>
                 <button class="btn btn-secondary" onclick="copyReport()">📋 Copiar Reporte</button>
             </div>
+        </div>
+    </div>
+
+    <!-- SheetJS para exportar Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Modal para editar pedido -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Editar Pedido</h3>
+                <button class="close-modal" onclick="closeEditModal()">✕ Cerrar</button>
+            </div>
+            <input type="hidden" id="editOrderId">
+            
+            <div class="form-group">
+                <label>Fecha del Pedido</label>
+                <input type="date" id="editFecha">
+            </div>
+            
+            <div class="form-group">
+                <label>Cliente</label>
+                <input type="text" id="editCliente" readonly style="background: #f0f0f0;">
+            </div>
+            
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="editTipo" onchange="toggleEditFields()">
+                    <option value="camaron">🦐 Camarón</option>
+                    <option value="hielo">🧊 Hielo</option>
+                </select>
+            </div>
+            
+            <div id="editCamaronFields">
+                <div class="form-group">
+                    <label>Libras de Camarón</label>
+                    <input type="number" id="editCantidadCamaron" step="0.01" oninput="recalculateEdit()">
+                </div>
+                <div class="form-group">
+                    <label>Precio por Libra ($)</label>
+                    <input type="number" id="editPrecioCamaron" step="0.001" oninput="recalculateEdit()">
+                </div>
+            </div>
+            
+            <div id="editHieloFields" style="display: none;">
+                <div class="form-group">
+                    <label>Cantidad de Sacos</label>
+                    <input type="number" id="editCantidadHielo" oninput="recalculateEdit()">
+                </div>
+                <div class="form-group">
+                    <label>Precio por Saco ($)</label>
+                    <input type="number" id="editPrecioHielo" step="0.001" oninput="recalculateEdit()">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Notas</label>
+                <textarea id="editNotas" rows="3"></textarea>
+            </div>
+            
+            <div class="alert alert-info">
+                <strong>Total:</strong> $<span id="editTotalCalc">0.00</span><br>
+                <strong>Comisión (1.5%):</strong> $<span id="editComisionCalc">0.00</span>
+            </div>
+            
+            <button class="btn" onclick="saveEditedOrder()">💾 Guardar Cambios</button>
         </div>
     </div>
 
@@ -900,6 +1187,335 @@
     </script>
 
     <script>
+        // =============================================
+        // FUNCIONES NUEVAS - EDICIÓN Y FILTROS
+        // =============================================
+
+        // Abrir modal de edición
+        function openEditModal(orderId) {
+            const order = window.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            document.getElementById('editOrderId').value = order.id;
+            document.getElementById('editFecha').value = order.fecha;
+            document.getElementById('editCliente').value = order.cliente;
+            document.getElementById('editTipo').value = order.tipo;
+            document.getElementById('editNotas').value = order.notas || '';
+
+            if (order.tipo === 'camaron') {
+                document.getElementById('editCantidadCamaron').value = order.cantidad;
+                document.getElementById('editPrecioCamaron').value = order.precio;
+                document.getElementById('editCamaronFields').style.display = 'block';
+                document.getElementById('editHieloFields').style.display = 'none';
+            } else {
+                document.getElementById('editCantidadHielo').value = order.cantidad;
+                document.getElementById('editPrecioHielo').value = order.precio;
+                document.getElementById('editCamaronFields').style.display = 'none';
+                document.getElementById('editHieloFields').style.display = 'block';
+            }
+
+            recalculateEdit();
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        // Cerrar modal
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+        }
+
+        // Cambiar campos según tipo
+        function toggleEditFields() {
+            const tipo = document.getElementById('editTipo').value;
+            if (tipo === 'camaron') {
+                document.getElementById('editCamaronFields').style.display = 'block';
+                document.getElementById('editHieloFields').style.display = 'none';
+            } else {
+                document.getElementById('editCamaronFields').style.display = 'none';
+                document.getElementById('editHieloFields').style.display = 'block';
+            }
+            recalculateEdit();
+        }
+
+        // Recalcular totales en modal de edición
+        function recalculateEdit() {
+            const tipo = document.getElementById('editTipo').value;
+            let total = 0;
+
+            if (tipo === 'camaron') {
+                const cantidad = parseFloat(document.getElementById('editCantidadCamaron').value) || 0;
+                const precio = parseFloat(document.getElementById('editPrecioCamaron').value) || 0;
+                total = cantidad * precio;
+            } else {
+                const cantidad = parseFloat(document.getElementById('editCantidadHielo').value) || 0;
+                const precio = parseFloat(document.getElementById('editPrecioHielo').value) || 0;
+                total = cantidad * precio;
+            }
+
+            const comision = total * 0.015;
+            document.getElementById('editTotalCalc').textContent = total.toFixed(2);
+            document.getElementById('editComisionCalc').textContent = comision.toFixed(2);
+        }
+
+        // Guardar pedido editado
+        async function saveEditedOrder() {
+            const orderId = parseInt(document.getElementById('editOrderId').value);
+            const order = window.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const tipo = document.getElementById('editTipo').value;
+            const fecha = document.getElementById('editFecha').value;
+            const notas = document.getElementById('editNotas').value;
+
+            let cantidad, precio;
+            if (tipo === 'camaron') {
+                cantidad = parseFloat(document.getElementById('editCantidadCamaron').value) || 0;
+                precio = parseFloat(document.getElementById('editPrecioCamaron').value) || 0;
+            } else {
+                cantidad = parseFloat(document.getElementById('editCantidadHielo').value) || 0;
+                precio = parseFloat(document.getElementById('editPrecioHielo').value) || 0;
+            }
+
+            if (cantidad <= 0 || precio <= 0) {
+                alert('Ingresa cantidad y precio válidos');
+                return;
+            }
+
+            // Actualizar orden
+            order.tipo = tipo;
+            order.fecha = fecha;
+            order.cantidad = cantidad;
+            order.precio = precio;
+            order.total = cantidad * precio;
+            order.comision = order.total * 0.015;
+            order.notas = notas;
+
+            await window.saveOrderToFirebase(order);
+            displayOrders();
+            updateSummary();
+            closeEditModal();
+            alert('✅ Pedido actualizado');
+        }
+
+        // Exportar a Excel
+        function exportToExcel() {
+            const filteredOrders = getFilteredOrders();
+            
+            if (filteredOrders.length === 0) {
+                alert('No hay pedidos para exportar');
+                return;
+            }
+
+            // Preparar datos para Excel
+            const data = filteredOrders.map(order => ({
+                'Fecha': order.fecha,
+                'Cliente': order.cliente,
+                'Tipo': order.tipo === 'camaron' ? 'Camarón' : 'Hielo',
+                'Cantidad': order.tipo === 'camaron' ? order.cantidad.toFixed(2) + ' lb' : order.cantidad + ' sacos',
+                'Precio Unitario': '$' + order.precio.toFixed(3),
+                'Total': '$' + order.total.toFixed(2),
+                'Comisión': '$' + order.comision.toFixed(2),
+                'Estado': order.estado === 'pagado' ? 'Pagado' : 'Pendiente',
+                'Fecha Factura': order.fechaFactura || '-',
+                'Fecha Pago': order.fechaPago || '-',
+                'Notas': order.notas || ''
+            }));
+
+            // Crear worksheet
+            const ws = XLSX.utils.json_to_sheet(data);
+            
+            // Ajustar anchos de columna
+            const colWidths = [
+                { wch: 12 }, // Fecha
+                { wch: 20 }, // Cliente
+                { wch: 10 }, // Tipo
+                { wch: 15 }, // Cantidad
+                { wch: 12 }, // Precio
+                { wch: 12 }, // Total
+                { wch: 12 }, // Comisión
+                { wch: 10 }, // Estado
+                { wch: 12 }, // Fecha Factura
+                { wch: 12 }, // Fecha Pago
+                { wch: 30 }  // Notas
+            ];
+            ws['!cols'] = colWidths;
+
+            // Crear workbook
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
+
+            // Generar nombre de archivo con fecha/hora
+            const now = new Date();
+            const dd = String(now.getDate()).padStart(2, '0');
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const yy = String(now.getFullYear()).slice(-2);
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const filename = `Detalle de Pedidos ${dd}-${mm}-${yy} ${hh}-${min}.xlsx`;
+
+            // Descargar archivo
+            XLSX.writeFile(wb, filename);
+            alert('✅ Excel exportado: ' + filename);
+        }
+
+        // Obtener pedidos filtrados
+        function getFilteredOrders() {
+            let filtered = [...window.orders];
+
+            const filtroEstado = document.getElementById('filtroEstado')?.value;
+            const filtroCliente = document.getElementById('filtroCliente')?.value;
+            const filtroTipo = document.getElementById('filtroTipo')?.value;
+            const filtroFechaDesde = document.getElementById('filtroFechaDesde')?.value;
+            const filtroFechaHasta = document.getElementById('filtroFechaHasta')?.value;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Filtro por estado
+            if (filtroEstado && filtroEstado !== 'todos') {
+                if (filtroEstado === 'vencido') {
+                    filtered = filtered.filter(o => {
+                        if (o.estado === 'pagado' || !o.fechaPago) return false;
+                        const fechaPago = new Date(o.fechaPago);
+                        return fechaPago < today;
+                    });
+                } else {
+                    filtered = filtered.filter(o => o.estado === filtroEstado);
+                }
+            }
+
+            // Filtro por cliente
+            if (filtroCliente && filtroCliente !== 'todos') {
+                filtered = filtered.filter(o => o.cliente === filtroCliente);
+            }
+
+            // Filtro por tipo
+            if (filtroTipo && filtroTipo !== 'todos') {
+                filtered = filtered.filter(o => o.tipo === filtroTipo);
+            }
+
+            // Filtro por rango de fechas
+            if (filtroFechaDesde) {
+                filtered = filtered.filter(o => o.fecha >= filtroFechaDesde);
+            }
+            if (filtroFechaHasta) {
+                filtered = filtered.filter(o => o.fecha <= filtroFechaHasta);
+            }
+
+            return filtered;
+        }
+
+        // Limpiar filtros
+        function clearFilters() {
+            document.getElementById('filtroEstado').value = 'todos';
+            document.getElementById('filtroCliente').value = 'todos';
+            document.getElementById('filtroTipo').value = 'todos';
+            document.getElementById('filtroFechaDesde').value = '';
+            document.getElementById('filtroFechaHasta').value = '';
+            filterOrders();
+        }
+
+        // Actualizar select de clientes en filtro
+        function updateClientFilter() {
+            const select = document.getElementById('filtroCliente');
+            if (!select) return;
+
+            const currentValue = select.value;
+            select.innerHTML = '<option value="todos">Todos</option>';
+
+            const uniqueClients = [...new Set(window.orders.map(o => o.cliente))].sort();
+            uniqueClients.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente;
+                option.textContent = cliente;
+                select.appendChild(option);
+            });
+
+            if (currentValue) select.value = currentValue;
+        }
+
+        // Limpiar filtro de resumen
+        function clearSummaryFilter() {
+            document.getElementById('resumenFechaDesde').value = '';
+            document.getElementById('resumenFechaHasta').value = '';
+            updateSummary();
+        }
+
+        // Generar resumen por cliente
+        function generateClientSummary() {
+            const container = document.getElementById('clientSummaryContainer');
+            if (!container) return;
+
+            const fechaDesde = document.getElementById('resumenFechaDesde')?.value;
+            const fechaHasta = document.getElementById('resumenFechaHasta')?.value;
+
+            let filteredOrders = [...window.orders];
+
+            // Aplicar filtro de fechas
+            if (fechaDesde) {
+                filteredOrders = filteredOrders.filter(o => o.fecha >= fechaDesde);
+            }
+            if (fechaHasta) {
+                filteredOrders = filteredOrders.filter(o => o.fecha <= fechaHasta);
+            }
+
+            // Agrupar por cliente
+            const clientStats = {};
+
+            filteredOrders.forEach(order => {
+                if (!clientStats[order.cliente]) {
+                    clientStats[order.cliente] = {
+                        librasCamaron: 0,
+                        sacosHielo: 0,
+                        totalComisiones: 0,
+                        pedidos: 0
+                    };
+                }
+
+                clientStats[order.cliente].pedidos++;
+                clientStats[order.cliente].totalComisiones += order.comision;
+
+                if (order.tipo === 'camaron') {
+                    clientStats[order.cliente].librasCamaron += order.cantidad;
+                } else {
+                    clientStats[order.cliente].sacosHielo += order.cantidad;
+                }
+            });
+
+            // Generar HTML
+            container.innerHTML = '';
+
+            Object.keys(clientStats).sort().forEach(cliente => {
+                const stats = clientStats[cliente];
+                const card = document.createElement('div');
+                card.className = 'client-summary-card';
+                card.innerHTML = `
+                    <h4>${cliente}</h4>
+                    <div class="client-summary-item">
+                        <span>🦐 Camarón:</span>
+                        <strong>${stats.librasCamaron.toFixed(2)} lb</strong>
+                    </div>
+                    <div class="client-summary-item">
+                        <span>🧊 Hielo:</span>
+                        <strong>${stats.sacosHielo} sacos</strong>
+                    </div>
+                    <div class="client-summary-item">
+                        <span>📦 Pedidos:</span>
+                        <strong>${stats.pedidos}</strong>
+                    </div>
+                    <div class="client-summary-item" style="border-top: 1px solid #e0e0e0; margin-top: 5px; padding-top: 5px;">
+                        <span>💰 Comisiones:</span>
+                        <strong style="color: #28a745;">$${stats.totalComisiones.toFixed(2)}</strong>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            if (Object.keys(clientStats).length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 30px;">No hay datos para mostrar</p>';
+            }
+        }
+
+
         function showTab(tabId) {
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
@@ -1096,22 +1712,49 @@
         }
 
         function displayOrders() {
-            const tbody = document.getElementById('ordersBody');
-            const filtro = document.getElementById('filtroEstado')?.value || 'todos';
+            const filtered = getFilteredOrders();
+            displayFilteredOrders(filtered);
+            updateClientFilter();
+        }
+
+        
+        async function addInvoiceDate(orderId) {
+            const order = window.orders.find(o => o.id === orderId);
+            if (!order) return;
             
+            const fechaFactura = prompt('Ingresa la fecha de emisión de la factura (YYYY-MM-DD):');
+            if (!fechaFactura) return;
+            
+            // Validar formato de fecha
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaFactura)) {
+                alert('Formato inválido. Usa: YYYY-MM-DD (Ej: 2026-02-16)');
+                return;
+            }
+            
+            // Buscar cliente para obtener días de crédito
+            const client = window.clients.find(c => c.nombre === order.cliente);
+            const diasCredito = client?.diasCredito || 0;
+            
+            // Calcular fecha de pago
+            const fechaFacturaDate = new Date(fechaFactura + 'T00:00:00');
+            const fechaPagoDate = new Date(fechaFacturaDate);
+            fechaPagoDate.setDate(fechaPagoDate.getDate() + diasCredito);
+            
+            order.fechaFactura = fechaFactura;
+            order.fechaPago = fechaPagoDate.toISOString().split('T')[0];
+            order.diasCredito = diasCredito;
+            
+            await window.saveOrderToFirebase(order);
+            displayOrders();
+            
+            alert(`✅ Factura registrada\n\nFecha factura: ${fechaFactura}\nDías crédito: ${diasCredito}\nFecha pago: ${order.fechaPago}`);
+        }
+
+
+        function displayFilteredOrders(filteredOrders) {
+            const tbody = document.getElementById('ordersBody');
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
-            let filteredOrders = window.orders;
-            if (filtro === 'vencido') {
-                filteredOrders = window.orders.filter(o => {
-                    if (o.estado === 'pagado' || !o.fechaFactura) return false;
-                    const fechaPago = new Date(o.fechaPago);
-                    return fechaPago < today;
-                });
-            } else if (filtro !== 'todos') {
-                filteredOrders = window.orders.filter(o => o.estado === filtro);
-            }
             
             tbody.innerHTML = '';
             filteredOrders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
@@ -1161,6 +1804,7 @@
                     <td>${fechaPagoHtml}</td>
                     <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                     <td>
+                        <button class="action-btn" style="background: #007bff; color: white;" data-action="edit" data-id="${order.id}">✏️</button>
                         ${order.estado === 'pendiente' 
                             ? `<button class="action-btn btn-pay" data-action="pay" data-id="${order.id}">✓</button>`
                             : '<span style="color: #28a745;">✓</span>'}
@@ -1175,7 +1819,9 @@
                     const action = this.getAttribute('data-action');
                     const orderId = parseInt(this.getAttribute('data-id'));
                     
-                    if (action === 'pay') {
+                    if (action === 'edit') {
+                        openEditModal(orderId);
+                    } else if (action === 'pay') {
                         await markAsPaid(orderId);
                     } else if (action === 'delete') {
                         await deleteOrder(orderId);
@@ -1188,39 +1834,6 @@
             if (filteredOrders.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 30px; color: #999;">No hay pedidos</td></tr>';
             }
-        }
-
-        // Add invoice date to order
-        async function addInvoiceDate(orderId) {
-            const order = window.orders.find(o => o.id === orderId);
-            if (!order) return;
-            
-            const fechaFactura = prompt('Ingresa la fecha de emisión de la factura (YYYY-MM-DD):');
-            if (!fechaFactura) return;
-            
-            // Validar formato de fecha
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaFactura)) {
-                alert('Formato inválido. Usa: YYYY-MM-DD (Ej: 2026-02-16)');
-                return;
-            }
-            
-            // Buscar cliente para obtener días de crédito
-            const client = window.clients.find(c => c.nombre === order.cliente);
-            const diasCredito = client?.diasCredito || 0;
-            
-            // Calcular fecha de pago
-            const fechaFacturaDate = new Date(fechaFactura + 'T00:00:00');
-            const fechaPagoDate = new Date(fechaFacturaDate);
-            fechaPagoDate.setDate(fechaPagoDate.getDate() + diasCredito);
-            
-            order.fechaFactura = fechaFactura;
-            order.fechaPago = fechaPagoDate.toISOString().split('T')[0];
-            order.diasCredito = diasCredito;
-            
-            await window.saveOrderToFirebase(order);
-            displayOrders();
-            
-            alert(`✅ Factura registrada\n\nFecha factura: ${fechaFactura}\nDías crédito: ${diasCredito}\nFecha pago: ${order.fechaPago}`);
         }
 
         function filterOrders() {
@@ -1407,22 +2020,40 @@
             }
         }
 
+        
         function updateSummary() {
-            const totalComisiones = window.orders.reduce((sum, o) => sum + o.comision, 0);
-            const comisionesPendientes = window.orders.filter(o => o.estado === 'pendiente').reduce((sum, o) => sum + o.comision, 0);
-            const comisionesPagadas = window.orders.filter(o => o.estado === 'pagado').reduce((sum, o) => sum + o.comision, 0);
+            const fechaDesde = document.getElementById('resumenFechaDesde')?.value;
+            const fechaHasta = document.getElementById('resumenFechaHasta')?.value;
+
+            let filteredOrders = [...window.orders];
+
+            // Aplicar filtro de fechas
+            if (fechaDesde) {
+                filteredOrders = filteredOrders.filter(o => o.fecha >= fechaDesde);
+            }
+            if (fechaHasta) {
+                filteredOrders = filteredOrders.filter(o => o.fecha <= fechaHasta);
+            }
+
+            const totalComisiones = filteredOrders.reduce((sum, o) => sum + o.comision, 0);
+            const comisionesPendientes = filteredOrders.filter(o => o.estado === 'pendiente').reduce((sum, o) => sum + o.comision, 0);
+            const comisionesPagadas = filteredOrders.filter(o => o.estado === 'pagado').reduce((sum, o) => sum + o.comision, 0);
             
-            const totalLibras = window.orders.filter(o => o.tipo === 'camaron').reduce((sum, o) => sum + o.cantidad, 0);
-            const totalSacos = window.orders.filter(o => o.tipo === 'hielo').reduce((sum, o) => sum + o.cantidad, 0);
+            const totalLibras = filteredOrders.filter(o => o.tipo === 'camaron').reduce((sum, o) => sum + o.cantidad, 0);
+            const totalSacos = filteredOrders.filter(o => o.tipo === 'hielo').reduce((sum, o) => sum + o.cantidad, 0);
             
             document.getElementById('totalComisiones').textContent = totalComisiones.toFixed(2);
             document.getElementById('comisionesPendientes').textContent = comisionesPendientes.toFixed(2);
             document.getElementById('comisionesPagadas').textContent = comisionesPagadas.toFixed(2);
             document.getElementById('totalLibras').textContent = totalLibras.toFixed(2);
             document.getElementById('totalSacos').textContent = totalSacos;
-            document.getElementById('totalPedidos').textContent = window.orders.length;
+            document.getElementById('totalPedidos').textContent = filteredOrders.length;
+
+            // Generar resumen por cliente
+            generateClientSummary();
         }
 
+        
         function generateReport() {
             const totalComisiones = window.orders.reduce((sum, o) => sum + o.comision, 0);
             const comisionesPendientes = window.orders.filter(o => o.estado === 'pendiente').reduce((sum, o) => sum + o.comision, 0);
