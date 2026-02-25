@@ -593,6 +593,68 @@
             cursor: pointer;
             font-weight: 600;
         }
+
+        /* Multi-select styling */
+        .multi-select {
+            min-height: 38px;
+            max-height: 120px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 5px;
+            background: white;
+        }
+        .multi-select option {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin: 2px 0;
+        }
+        .multi-select option:checked {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .multi-select option:hover {
+            background: #f0f0f0;
+        }
+        .selected-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+            min-height: 20px;
+        }
+        .selected-tag {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .selected-tag .remove-tag {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+        .selected-tag .remove-tag:hover {
+            opacity: 1;
+        }
+        .filter-label-with-count {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filter-count {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -730,29 +792,39 @@
             
             <div class="filters-row">
                 <div class="filter-group">
-                    <label>Estado</label>
-                    <select id="filtroEstado" onchange="filterOrders()">
-                        <option value="todos">Todos</option>
-                        <option value="pendiente">Pendientes</option>
-                        <option value="pagado">Pagados</option>
-                        <option value="vencido">Vencidos</option>
+                    <label class="filter-label-with-count">
+                        <span>Estado</span>
+                        <span class="filter-count" id="estadoCount" style="display: none;">0</span>
+                    </label>
+                    <select id="filtroEstado" class="multi-select" multiple onchange="filterOrders()">
+                        <option value="pendiente">⏳ Pendientes</option>
+                        <option value="pagado">✅ Pagados</option>
+                        <option value="vencido">❌ Vencidos</option>
+                        <option value="sin_factura">📋 Sin Factura</option>
                     </select>
+                    <div id="estadoTags" class="selected-items"></div>
                 </div>
                 
                 <div class="filter-group">
-                    <label>Cliente</label>
-                    <select id="filtroCliente" onchange="filterOrders()">
-                        <option value="todos">Todos</option>
+                    <label class="filter-label-with-count">
+                        <span>Cliente</span>
+                        <span class="filter-count" id="clienteCount" style="display: none;">0</span>
+                    </label>
+                    <select id="filtroCliente" class="multi-select" multiple onchange="filterOrders()">
                     </select>
+                    <div id="clienteTags" class="selected-items"></div>
                 </div>
                 
                 <div class="filter-group">
-                    <label>Tipo</label>
-                    <select id="filtroTipo" onchange="filterOrders()">
-                        <option value="todos">Todos</option>
+                    <label class="filter-label-with-count">
+                        <span>Tipo</span>
+                        <span class="filter-count" id="tipoCount" style="display: none;">0</span>
+                    </label>
+                    <select id="filtroTipo" class="multi-select" multiple onchange="filterOrders()">
                         <option value="camaron">🦐 Camarón</option>
                         <option value="hielo">🧊 Hielo</option>
                     </select>
+                    <div id="tipoTags" class="selected-items"></div>
                 </div>
                 
                 <div class="filter-group">
@@ -1296,7 +1368,186 @@
             alert('✅ Pedido actualizado');
         }
 
-        // Exportar a Excel
+        // =============================================
+        // FUNCIONES MULTI-SELECT FILTERS
+        // =============================================
+
+        // Obtener valores seleccionados de un multi-select
+        function getMultiSelectValues(selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return [];
+            const options = select.selectedOptions;
+            return Array.from(options).map(opt => opt.value);
+        }
+
+        // Actualizar tags visuales de selección
+        function updateFilterTags() {
+            // Estado
+            const estadoValues = getMultiSelectValues('filtroEstado');
+            updateTagsDisplay('estadoTags', 'estadoCount', estadoValues, {
+                'pendiente': '⏳ Pendiente',
+                'pagado': '✅ Pagado',
+                'vencido': '❌ Vencido',
+                'sin_factura': '📋 Sin Factura'
+            });
+
+            // Cliente
+            const clienteValues = getMultiSelectValues('filtroCliente');
+            const clienteLabels = {};
+            clienteValues.forEach(val => {
+                clienteLabels[val] = val;
+            });
+            updateTagsDisplay('clienteTags', 'clienteCount', clienteValues, clienteLabels);
+
+            // Tipo
+            const tipoValues = getMultiSelectValues('filtroTipo');
+            updateTagsDisplay('tipoTags', 'tipoCount', tipoValues, {
+                'camaron': '🦐 Camarón',
+                'hielo': '🧊 Hielo'
+            });
+        }
+
+        // Actualizar display de tags
+        function updateTagsDisplay(containerId, countId, values, labels) {
+            const container = document.getElementById(containerId);
+            const countBadge = document.getElementById(countId);
+            
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (values.length > 0) {
+                countBadge.style.display = 'inline-block';
+                countBadge.textContent = values.length;
+
+                values.forEach(value => {
+                    const tag = document.createElement('div');
+                    tag.className = 'selected-tag';
+                    tag.innerHTML = `
+                        <span>${labels[value] || value}</span>
+                        <span class="remove-tag" onclick="removeFilterTag('${containerId.replace('Tags', '')}', '${value}')">✕</span>
+                    `;
+                    container.appendChild(tag);
+                });
+            } else {
+                countBadge.style.display = 'none';
+            }
+        }
+
+        // Remover un tag específico
+        function removeFilterTag(filterType, value) {
+            const selectId = 'filtro' + filterType.charAt(0).toUpperCase() + filterType.slice(1);
+            const select = document.getElementById(selectId);
+            
+            if (select) {
+                const options = select.options;
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].value === value) {
+                        options[i].selected = false;
+                        break;
+                    }
+                }
+                filterOrders();
+            }
+        }
+
+        // Actualizar getFilteredOrders para multi-select
+        function getFilteredOrdersMulti() {
+            let filtered = [...window.orders];
+
+            const filtroEstado = getMultiSelectValues('filtroEstado');
+            const filtroCliente = getMultiSelectValues('filtroCliente');
+            const filtroTipo = getMultiSelectValues('filtroTipo');
+            const filtroFechaDesde = document.getElementById('filtroFechaDesde')?.value;
+            const filtroFechaHasta = document.getElementById('filtroFechaHasta')?.value;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Filtro por estado (múltiple)
+            if (filtroEstado.length > 0) {
+                filtered = filtered.filter(o => {
+                    // Determinar el estado real del pedido
+                    let realStatus = o.estado;
+                    
+                    if (realStatus === 'pendiente') {
+                        // Verificar si está vencido
+                        if (o.fechaPago) {
+                            const fechaPago = new Date(o.fechaPago);
+                            if (fechaPago < today) {
+                                realStatus = 'vencido';
+                            }
+                        } else {
+                            realStatus = 'sin_factura';
+                        }
+                    }
+
+                    return filtroEstado.includes(realStatus);
+                });
+            }
+
+            // Filtro por cliente (múltiple)
+            if (filtroCliente.length > 0) {
+                filtered = filtered.filter(o => filtroCliente.includes(o.cliente));
+            }
+
+            // Filtro por tipo (múltiple)
+            if (filtroTipo.length > 0) {
+                filtered = filtered.filter(o => filtroTipo.includes(o.tipo));
+            }
+
+            // Filtro por rango de fechas
+            if (filtroFechaDesde) {
+                filtered = filtered.filter(o => o.fecha >= filtroFechaDesde);
+            }
+            if (filtroFechaHasta) {
+                filtered = filtered.filter(o => o.fecha <= filtroFechaHasta);
+            }
+
+            return filtered;
+        }
+
+        // Actualizar clearFilters para multi-select
+        function clearFiltersMulti() {
+            // Deseleccionar todos los options
+            ['filtroEstado', 'filtroCliente', 'filtroTipo'].forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    for (let i = 0; i < select.options.length; i++) {
+                        select.options[i].selected = false;
+                    }
+                }
+            });
+
+            document.getElementById('filtroFechaDesde').value = '';
+            document.getElementById('filtroFechaHasta').value = '';
+            
+            updateFilterTags();
+            filterOrders();
+        }
+
+        // Actualizar updateClientFilter para multi-select
+        function updateClientFilterMulti() {
+            const select = document.getElementById('filtroCliente');
+            if (!select) return;
+
+            const currentValues = getMultiSelectValues('filtroCliente');
+            select.innerHTML = '';
+
+            const uniqueClients = [...new Set(window.orders.map(o => o.cliente))].sort();
+            uniqueClients.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente;
+                option.textContent = cliente;
+                if (currentValues.includes(cliente)) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+
+
+                // Exportar a Excel
         function exportToExcel() {
             const filteredOrders = getFilteredOrders();
             
@@ -1358,7 +1609,9 @@
         }
 
         // Obtener pedidos filtrados
-        function getFilteredOrders() {
+        function getFilteredOrders() { return getFilteredOrdersMulti(); }
+
+        function getFilteredOrdersOld() {
             let filtered = [...window.orders];
 
             const filtroEstado = document.getElementById('filtroEstado')?.value;
@@ -1405,7 +1658,9 @@
         }
 
         // Limpiar filtros
-        function clearFilters() {
+        function clearFilters() { return clearFiltersMulti(); }
+
+        function clearFiltersOld() {
             document.getElementById('filtroEstado').value = 'todos';
             document.getElementById('filtroCliente').value = 'todos';
             document.getElementById('filtroTipo').value = 'todos';
@@ -1415,7 +1670,9 @@
         }
 
         // Actualizar select de clientes en filtro
-        function updateClientFilter() {
+        function updateClientFilter() { return updateClientFilterMulti(); }
+
+        function updateClientFilterOld() {
             const select = document.getElementById('filtroCliente');
             if (!select) return;
 
