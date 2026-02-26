@@ -524,40 +524,7 @@
             background: #218838;
             transform: translateY(-2px);
         }
-        .client-summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .client-summary-card {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
-            transition: all 0.3s;
-        }
-        .client-summary-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-        }
-        .client-summary-card h4 {
-            color: #667eea;
-            font-size: 16px;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 8px;
-        }
-        .client-summary-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            font-size: 14px;
-            color: #333;
-        }
-        .client-summary-item strong {
-            color: #667eea;
-        }
+
         .date-filter-section {
             background: #f8f9fa;
             padding: 20px;
@@ -654,6 +621,105 @@
             border-radius: 10px;
             font-size: 11px;
             font-weight: bold;
+        }
+
+        /* Tabla de resumen por cliente */
+        .client-summary-table-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .client-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .client-summary-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .client-summary-table th {
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .client-summary-table th:last-child {
+            text-align: right;
+        }
+        .client-summary-table tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+            transition: background 0.2s;
+        }
+        .client-summary-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        .client-summary-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        .client-summary-table td {
+            padding: 15px;
+            color: #333;
+            font-size: 14px;
+        }
+        .client-summary-table .client-name {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 15px;
+        }
+        .client-summary-table .number-cell {
+            text-align: right;
+            font-weight: 500;
+        }
+        .client-summary-table .total-cell {
+            font-weight: 700;
+            color: #28a745;
+            font-size: 15px;
+        }
+        .client-summary-table tfoot {
+            background: #f8f9fa;
+            border-top: 2px solid #667eea;
+        }
+        .client-summary-table tfoot td {
+            padding: 15px;
+            font-weight: 700;
+            font-size: 15px;
+            color: #333;
+        }
+        .client-summary-table tfoot .total-label {
+            color: #667eea;
+        }
+        .client-summary-table tfoot .total-value {
+            color: #28a745;
+            text-align: right;
+        }
+        .summary-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .summary-section-header h3 {
+            color: #333;
+            font-size: 20px;
+        }
+        .summary-section-header .summary-info {
+            font-size: 13px;
+            color: #666;
+            background: #f0f0f0;
+            padding: 5px 12px;
+            border-radius: 15px;
+        }
+        @media (max-width: 768px) {
+            .client-summary-table {
+                font-size: 12px;
+            }
+            .client-summary-table th,
+            .client-summary-table td {
+                padding: 10px 8px;
+            }
         }
     </style>
 </head>
@@ -968,8 +1034,39 @@
             </div>
             
             <!-- Resumen por Cliente -->
-            <h3 style="margin-top: 30px; margin-bottom: 15px; color: #333;">📊 Resumen por Cliente</h3>
-            <div id="clientSummaryContainer" class="client-summary-grid"></div>
+            <div class="summary-section-header">
+                <h3>📊 Resumen por Cliente</h3>
+                <span class="summary-info" id="clientSummaryInfo">0 clientes</span>
+            </div>
+            <div class="client-summary-table-container">
+                <table class="client-summary-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th style="text-align: right;">🦐 Camarón (lb)</th>
+                            <th style="text-align: right;">🧊 Hielo (sacos)</th>
+                            <th style="text-align: right;">📦 Pedidos</th>
+                            <th style="text-align: right;">💰 Comisiones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientSummaryTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: #999;">
+                                No hay datos para mostrar
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot id="clientSummaryTableFooter" style="display: none;">
+                        <tr>
+                            <td class="total-label">TOTAL</td>
+                            <td class="total-value" id="totalLibrasFooter">0.00 lb</td>
+                            <td class="total-value" id="totalSacosFooter">0 sacos</td>
+                            <td class="total-value" id="totalPedidosFooter">0</td>
+                            <td class="total-value" id="totalComisionesFooter">$0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
 
             <button class="btn" onclick="generateReport()">📄 Generar Reporte para Gerencia</button>
 
@@ -1697,10 +1794,13 @@
             updateSummary();
         }
 
-        // Generar resumen por cliente
+        // Generar resumen por cliente (TABLA)
         function generateClientSummary() {
-            const container = document.getElementById('clientSummaryContainer');
-            if (!container) return;
+            const tbody = document.getElementById('clientSummaryTableBody');
+            const tfoot = document.getElementById('clientSummaryTableFooter');
+            const infoSpan = document.getElementById('clientSummaryInfo');
+            
+            if (!tbody) return;
 
             const fechaDesde = document.getElementById('resumenFechaDesde')?.value;
             const fechaHasta = document.getElementById('resumenFechaHasta')?.value;
@@ -1738,37 +1838,60 @@
                 }
             });
 
-            // Generar HTML
-            container.innerHTML = '';
+            // Limpiar tabla
+            tbody.innerHTML = '';
 
-            Object.keys(clientStats).sort().forEach(cliente => {
-                const stats = clientStats[cliente];
-                const card = document.createElement('div');
-                card.className = 'client-summary-card';
-                card.innerHTML = `
-                    <h4>${cliente}</h4>
-                    <div class="client-summary-item">
-                        <span>🦐 Camarón:</span>
-                        <strong>${stats.librasCamaron.toFixed(2)} lb</strong>
-                    </div>
-                    <div class="client-summary-item">
-                        <span>🧊 Hielo:</span>
-                        <strong>${stats.sacosHielo} sacos</strong>
-                    </div>
-                    <div class="client-summary-item">
-                        <span>📦 Pedidos:</span>
-                        <strong>${stats.pedidos}</strong>
-                    </div>
-                    <div class="client-summary-item" style="border-top: 1px solid #e0e0e0; margin-top: 5px; padding-top: 5px;">
-                        <span>💰 Comisiones:</span>
-                        <strong style="color: #28a745;">$${stats.totalComisiones.toFixed(2)}</strong>
-                    </div>
+            const clientesOrdenados = Object.keys(clientStats).sort();
+
+            if (clientesOrdenados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #999;">
+                            No hay datos para mostrar
+                        </td>
+                    </tr>
                 `;
-                container.appendChild(card);
+                tfoot.style.display = 'none';
+                if (infoSpan) infoSpan.textContent = '0 clientes';
+                return;
+            }
+
+            // Totales
+            let totalLibrasGlobal = 0;
+            let totalSacosGlobal = 0;
+            let totalPedidosGlobal = 0;
+            let totalComisionesGlobal = 0;
+
+            // Generar filas
+            clientesOrdenados.forEach(cliente => {
+                const stats = clientStats[cliente];
+                
+                totalLibrasGlobal += stats.librasCamaron;
+                totalSacosGlobal += stats.sacosHielo;
+                totalPedidosGlobal += stats.pedidos;
+                totalComisionesGlobal += stats.totalComisiones;
+
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td class="client-name">${cliente}</td>
+                    <td class="number-cell">${stats.librasCamaron.toFixed(2)}</td>
+                    <td class="number-cell">${stats.sacosHielo}</td>
+                    <td class="number-cell">${stats.pedidos}</td>
+                    <td class="number-cell total-cell">$${stats.totalComisiones.toFixed(2)}</td>
+                `;
             });
 
-            if (Object.keys(clientStats).length === 0) {
-                container.innerHTML = '<p style="color: #999; text-align: center; padding: 30px;">No hay datos para mostrar</p>';
+            // Actualizar footer con totales
+            document.getElementById('totalLibrasFooter').textContent = totalLibrasGlobal.toFixed(2) + ' lb';
+            document.getElementById('totalSacosFooter').textContent = totalSacosGlobal + ' sacos';
+            document.getElementById('totalPedidosFooter').textContent = totalPedidosGlobal;
+            document.getElementById('totalComisionesFooter').textContent = '$' + totalComisionesGlobal.toFixed(2);
+            
+            tfoot.style.display = 'table-footer-group';
+            
+            // Actualizar info
+            if (infoSpan) {
+                infoSpan.textContent = `${clientesOrdenados.length} cliente${clientesOrdenados.length !== 1 ? 's' : ''}`;
             }
         }
 
