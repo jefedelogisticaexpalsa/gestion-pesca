@@ -721,6 +721,16 @@
                 padding: 10px 8px;
             }
         }
+
+        /* Footer de tabla de pedidos con totales */
+        #ordersFooter td {
+            font-size: 15px;
+        }
+        #ordersFooter #footerCantidad {
+            font-weight: 600;
+            color: #333;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
@@ -916,6 +926,7 @@
                             <th>Cliente</th>
                             <th>Tipo</th>
                             <th>Cantidad</th>
+                            <th>Precio Unit.</th>
                             <th>Total</th>
                             <th>Comisión</th>
                             <th>Fecha Factura</th>
@@ -926,6 +937,16 @@
                     </thead>
                     <tbody id="ordersBody">
                     </tbody>
+                    <tfoot id="ordersFooter" style="display: none;">
+                        <tr style="background: #f8f9fa; border-top: 2px solid #667eea; font-weight: 700;">
+                            <td colspan="3" style="text-align: right; padding: 15px; color: #667eea;">TOTALES:</td>
+                            <td id="footerCantidad" style="padding: 15px;">-</td>
+                            <td style="padding: 15px;">-</td>
+                            <td id="footerTotal" style="padding: 15px; color: #28a745;">$0.00</td>
+                            <td id="footerComision" style="padding: 15px; color: #28a745;">$0.00</td>
+                            <td colspan="4" style="padding: 15px;"></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -1659,7 +1680,7 @@
                 'Cliente': order.cliente,
                 'Tipo': order.tipo === 'camaron' ? 'Camarón' : 'Hielo',
                 'Cantidad': order.tipo === 'camaron' ? order.cantidad.toFixed(2) + ' lb' : order.cantidad + ' sacos',
-                'Precio Unitario': '$' + order.precio.toFixed(3),
+                'Precio Unit.': order.tipo === 'camaron' ? '$' + order.precio.toFixed(3) + '/lb' : '$' + order.precio.toFixed(3) + '/saco',
                 'Total': '$' + order.total.toFixed(2),
                 'Comisión': '$' + order.comision.toFixed(2),
                 'Estado': order.estado === 'pagado' ? 'Pagado' : 'Pendiente',
@@ -1677,7 +1698,7 @@
                 { wch: 20 }, // Cliente
                 { wch: 10 }, // Tipo
                 { wch: 15 }, // Cantidad
-                { wch: 12 }, // Precio
+                { wch: 15 }, // Precio Unit.
                 { wch: 12 }, // Total
                 { wch: 12 }, // Comisión
                 { wch: 10 }, // Estado
@@ -2133,18 +2154,38 @@
 
         function displayFilteredOrders(filteredOrders) {
             const tbody = document.getElementById('ordersBody');
+            const tfoot = document.getElementById('ordersFooter');
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
             tbody.innerHTML = '';
             filteredOrders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
             
+            // Variables para totales
+            let totalCantidadCamaron = 0;
+            let totalCantidadHielo = 0;
+            let totalGeneral = 0;
+            let totalComisiones = 0;
+            
             filteredOrders.forEach(order => {
                 const row = tbody.insertRow();
+                
+                // Acumular totales
+                totalGeneral += order.total;
+                totalComisiones += order.comision;
+                if (order.tipo === 'camaron') {
+                    totalCantidadCamaron += order.cantidad;
+                } else {
+                    totalCantidadHielo += order.cantidad;
+                }
                 
                 const cantidadText = order.tipo === 'camaron' 
                     ? `${order.cantidad.toFixed(2)} lb` 
                     : `${order.cantidad} sacos`;
+                
+                const precioText = order.tipo === 'camaron'
+                    ? `$${order.precio.toFixed(3)}/lb`
+                    : `$${order.precio.toFixed(3)}/saco`;
                 
                 // Determinar estado
                 let statusClass, statusText;
@@ -2178,6 +2219,7 @@
                     <td>${order.cliente}</td>
                     <td>${order.tipo === 'camaron' ? '🦐 Camarón' : '🧊 Hielo'}</td>
                     <td>${cantidadText}</td>
+                    <td>${precioText}</td>
                     <td>$${order.total.toFixed(2)}</td>
                     <td><strong>$${order.comision.toFixed(2)}</strong></td>
                     <td>${fechaFacturaHtml}</td>
@@ -2212,9 +2254,27 @@
             });
             
             if (filteredOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 30px; color: #999;">No hay pedidos</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 30px; color: #999;">No hay pedidos</td></tr>';
+                tfoot.style.display = 'none';
+            } else {
+                // Actualizar footer con totales
+                let cantidadText = '';
+                if (totalCantidadCamaron > 0 && totalCantidadHielo > 0) {
+                    cantidadText = `🦐 ${totalCantidadCamaron.toFixed(2)} lb<br>🧊 ${totalCantidadHielo} sacos`;
+                } else if (totalCantidadCamaron > 0) {
+                    cantidadText = `🦐 ${totalCantidadCamaron.toFixed(2)} lb`;
+                } else if (totalCantidadHielo > 0) {
+                    cantidadText = `🧊 ${totalCantidadHielo} sacos`;
+                }
+                
+                document.getElementById('footerCantidad').innerHTML = cantidadText || '-';
+                document.getElementById('footerTotal').textContent = '$' + totalGeneral.toFixed(2);
+                document.getElementById('footerComision').textContent = '$' + totalComisiones.toFixed(2);
+                
+                tfoot.style.display = 'table-footer-group';
             }
         }
+
 
         function filterOrders() {
             displayOrders();
