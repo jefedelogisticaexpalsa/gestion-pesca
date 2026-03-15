@@ -737,7 +737,7 @@
     <!-- Login Screen -->
     <div id="loginScreen" class="login-screen">
         <div class="login-box">
-            <h1>🦐 Gestión de Pesca</h1>
+            <h1>Gestión de Pesca</h1>
             <p>Inicia sesión para acceder a tus datos en la nube</p>
             
             <button id="googleSignInBtn" class="google-btn">
@@ -778,7 +778,7 @@
                 <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
             </div>
             
-            <h1>🦐 Gestión de Pesca y Hielo</h1>
+            <h1>Gestión de Pesca y Hielo</h1>
             <p>Sistema Cloud con Firebase</p>
             <div id="syncStatus" class="sync-status sync-loading">⏳ Conectando...</div>
         </div>
@@ -796,8 +796,8 @@
             <div class="form-group">
                 <label>Tipo de Pedido</label>
                 <select id="tipoPedido" onchange="updateFormFields()">
-                    <option value="camaron">🦐 Camarón</option>
-                    <option value="hielo">🧊 Hielo</option>
+                    <option value="logistica">Logística</option>
+                    <option value="hielo">Hielo</option>
                 </select>
             </div>
 
@@ -808,23 +808,20 @@
                 </select>
             </div>
 
-            <div id="camaron-fields">
+            <div id="logistica-fields">
                 <div class="form-group">
-                    <label>Cantidad de Bins (opcional)</label>
-                    <input type="number" id="cantidadBins" placeholder="Ej: 30" oninput="calculateFromBins()">
-                    <small class="client-price">Si ingresas bins, las libras se calcularán automáticamente</small>
+                    <label>Cantidad de Bines</label>
+                    <input type="number" id="cantidadBines" min="1" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Libras de Camarón</label>
-                    <input type="number" id="libras" step="0.01" placeholder="Ej: 30000" oninput="calculateCommission()">
-                    <div id="binsInfo" class="client-price"></div>
+                    <label>Libras de Logística</label>
+                    <input type="number" id="cantidadLogistica" step="0.01" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Precio por Libra ($)</label>
-                    <input type="number" id="precioCamaron" step="0.001" placeholder="Ej: 0.055" oninput="calculateCommission()">
-                    <div id="clientPriceCamaron" class="client-price"></div>
+                    <label>Precio por Libra (Logística) ($)</label>
+                    <input type="number" id="precioLogistica" step="0.001" required>
                 </div>
             </div>
 
@@ -897,10 +894,19 @@
                         <span class="filter-count" id="tipoCount" style="display: none;">0</span>
                     </label>
                     <select id="filtroTipo" class="multi-select" multiple onchange="filterOrders()">
-                        <option value="camaron">🦐 Camarón</option>
-                        <option value="hielo">🧊 Hielo</option>
+                        <option value="logistica">Logística</option>
+                        <option value="hielo">Hielo</option>
                     </select>
                     <div id="tipoTags" class="selected-items"></div>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Tipo (simple)</label>
+                    <select id="filtroTipoSimple" onchange="filterOrders()">
+                        <option value="todos">Todos</option>
+                        <option value="logistica">Logística</option>
+                        <option value="hielo">Hielo</option>
+                    </select>
                 </div>
                 
                 <div class="filter-group">
@@ -925,7 +931,8 @@
                             <th>Fecha Pedido</th>
                             <th>Cliente</th>
                             <th>Tipo</th>
-                            <th>Cantidad</th>
+                            <th>Bines</th>
+                            <th>Cantidad (lb)</th>
                             <th>Precio Unit.</th>
                             <th>Total</th>
                             <th>Comisión</th>
@@ -940,10 +947,11 @@
                     <tfoot id="ordersFooter" style="display: none;">
                         <tr style="background: #f8f9fa; border-top: 2px solid #667eea; font-weight: 700;">
                             <td colspan="3" style="text-align: right; padding: 15px; color: #667eea;">TOTALES:</td>
-                            <td id="footerCantidad" style="padding: 15px;">-</td>
+                            <td id="footerBines" style="padding: 15px; text-align: right;">-</td>
+                            <td id="footerCantidad" style="padding: 15px; text-align: right;">-</td>
                             <td style="padding: 15px;">-</td>
-                            <td id="footerTotal" style="padding: 15px; color: #28a745;">$0.00</td>
-                            <td id="footerComision" style="padding: 15px; color: #28a745;">$0.00</td>
+                            <td id="footerTotal" style="padding: 15px; color: #28a745; text-align: right;">0.00</td>
+                            <td id="footerComision" style="padding: 15px; color: #28a745; text-align: right;">0.00</td>
                             <td colspan="4" style="padding: 15px;"></td>
                         </tr>
                     </tfoot>
@@ -961,7 +969,7 @@
 
             <div class="two-column">
                 <div class="form-group">
-                    <label>Precio Camarón ($/lb)</label>
+                    <label>Precio Logística ($/lb)</label>
                     <input type="number" id="precioClienteCamaron" step="0.001" placeholder="Ej: 0.055">
                 </div>
 
@@ -991,7 +999,7 @@
                     <thead>
                         <tr>
                             <th>Cliente</th>
-                            <th>Precio Camarón</th>
+                            <th>Precio Logística</th>
                             <th>Precio Hielo</th>
                             <th>Lb/Bin</th>
                             <th>Crédito</th>
@@ -1041,11 +1049,11 @@
 
             <div class="summary-grid">
                 <div class="summary-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                    <h3>🦐 Total Libras Camarón</h3>
+                    <h3>Total Libras Logística</h3>
                     <div class="amount"><span id="totalLibras">0</span> lb</div>
                 </div>
                 <div class="summary-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                    <h3>🧊 Total Sacos Hielo</h3>
+                    <h3>Total Sacos Hielo</h3>
                     <div class="amount"><span id="totalSacos">0</span> sacos</div>
                 </div>
                 <div class="summary-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
@@ -1064,8 +1072,8 @@
                     <thead>
                         <tr>
                             <th>Cliente</th>
-                            <th style="text-align: right;">🦐 Camarón (lb)</th>
-                            <th style="text-align: right;">🧊 Hielo (sacos)</th>
+                            <th style="text-align: right;">Logística (lb)</th>
+                            <th style="text-align: right;">Hielo (sacos)</th>
                             <th style="text-align: right;">📦 Pedidos</th>
                             <th style="text-align: right;">💰 Comisiones</th>
                         </tr>
@@ -1126,19 +1134,19 @@
             <div class="form-group">
                 <label>Tipo</label>
                 <select id="editTipo" onchange="toggleEditFields()">
-                    <option value="camaron">🦐 Camarón</option>
-                    <option value="hielo">🧊 Hielo</option>
+                    <option value="logistica">Logística</option>
+                    <option value="hielo">Hielo</option>
                 </select>
             </div>
             
-            <div id="editCamaronFields">
+            <div id="editLogisticaFields">
                 <div class="form-group">
-                    <label>Libras de Camarón</label>
-                    <input type="number" id="editCantidadCamaron" step="0.01" oninput="recalculateEdit()">
+                    <label>Libras de Logística</label>
+                    <input type="number" id="editCantidadLogistica" step="0.01" oninput="recalculateEdit()">
                 </div>
                 <div class="form-group">
-                    <label>Precio por Libra ($)</label>
-                    <input type="number" id="editPrecioCamaron" step="0.001" oninput="recalculateEdit()">
+                    <label>Precio por Libra (Logística) ($)</label>
+                    <input type="number" id="editPrecioLogistica" step="0.001" oninput="recalculateEdit()">
                 </div>
             </div>
             
@@ -1392,15 +1400,16 @@
             document.getElementById('editTipo').value = order.tipo;
             document.getElementById('editNotas').value = order.notas || '';
 
-            if (order.tipo === 'camaron') {
-                document.getElementById('editCantidadCamaron').value = order.cantidad;
-                document.getElementById('editPrecioCamaron').value = order.precio;
-                document.getElementById('editCamaronFields').style.display = 'block';
+            if (order.tipo === 'logistica') {
+                document.getElementById('editCantidadBines').value = order.bines || 0;
+                document.getElementById('editCantidadLogistica').value = order.cantidad;
+                document.getElementById('editPrecioLogistica').value = order.precio;
+                document.getElementById('editLogisticaFields').style.display = 'block';
                 document.getElementById('editHieloFields').style.display = 'none';
             } else {
                 document.getElementById('editCantidadHielo').value = order.cantidad;
                 document.getElementById('editPrecioHielo').value = order.precio;
-                document.getElementById('editCamaronFields').style.display = 'none';
+                document.getElementById('editLogisticaFields').style.display = 'none';
                 document.getElementById('editHieloFields').style.display = 'block';
             }
 
@@ -1416,11 +1425,11 @@
         // Cambiar campos según tipo
         function toggleEditFields() {
             const tipo = document.getElementById('editTipo').value;
-            if (tipo === 'camaron') {
-                document.getElementById('editCamaronFields').style.display = 'block';
+            if (tipo === 'logistica') {
+                document.getElementById('editLogisticaFields').style.display = 'block';
                 document.getElementById('editHieloFields').style.display = 'none';
             } else {
-                document.getElementById('editCamaronFields').style.display = 'none';
+                document.getElementById('editLogisticaFields').style.display = 'none';
                 document.getElementById('editHieloFields').style.display = 'block';
             }
             recalculateEdit();
@@ -1431,9 +1440,9 @@
             const tipo = document.getElementById('editTipo').value;
             let total = 0;
 
-            if (tipo === 'camaron') {
-                const cantidad = parseFloat(document.getElementById('editCantidadCamaron').value) || 0;
-                const precio = parseFloat(document.getElementById('editPrecioCamaron').value) || 0;
+            if (tipo === 'logistica') {
+                const cantidad = parseFloat(document.getElementById('editCantidadLogistica').value) || 0;
+                const precio = parseFloat(document.getElementById('editPrecioLogistica').value) || 0;
                 total = cantidad * precio;
             } else {
                 const cantidad = parseFloat(document.getElementById('editCantidadHielo').value) || 0;
@@ -1456,10 +1465,11 @@
             const fecha = document.getElementById('editFecha').value;
             const notas = document.getElementById('editNotas').value;
 
-            let cantidad, precio;
-            if (tipo === 'camaron') {
-                cantidad = parseFloat(document.getElementById('editCantidadCamaron').value) || 0;
-                precio = parseFloat(document.getElementById('editPrecioCamaron').value) || 0;
+            let cantidad, precio, bines = 0;
+            if (tipo === 'logistica') {
+                bines = parseInt(document.getElementById('editCantidadBines').value) || 0;
+                cantidad = parseFloat(document.getElementById('editCantidadLogistica').value) || 0;
+                precio = parseFloat(document.getElementById('editPrecioLogistica').value) || 0;
             } else {
                 cantidad = parseFloat(document.getElementById('editCantidadHielo').value) || 0;
                 precio = parseFloat(document.getElementById('editPrecioHielo').value) || 0;
@@ -1473,6 +1483,7 @@
             // Actualizar orden
             order.tipo = tipo;
             order.fecha = fecha;
+            order.bines = bines;
             order.cantidad = cantidad;
             order.precio = precio;
             order.total = cantidad * precio;
@@ -1520,8 +1531,8 @@
             // Tipo
             const tipoValues = getMultiSelectValues('filtroTipo');
             updateTagsDisplay('tipoTags', 'tipoCount', tipoValues, {
-                'camaron': '🦐 Camarón',
-                'hielo': '🧊 Hielo'
+                'logistica': 'Logística',
+                'hielo': 'Hielo'
             });
         }
 
@@ -1576,6 +1587,7 @@
             const filtroEstado = getMultiSelectValues('filtroEstado');
             const filtroCliente = getMultiSelectValues('filtroCliente');
             const filtroTipo = getMultiSelectValues('filtroTipo');
+            const filtroTipoSimple = document.getElementById('filtroTipoSimple')?.value;
             const filtroFechaDesde = document.getElementById('filtroFechaDesde')?.value;
             const filtroFechaHasta = document.getElementById('filtroFechaHasta')?.value;
 
@@ -1614,6 +1626,11 @@
                 filtered = filtered.filter(o => filtroTipo.includes(o.tipo));
             }
 
+            // Filtro por tipo simple (adicional)
+            if (filtroTipoSimple && filtroTipoSimple !== 'todos') {
+                filtered = filtered.filter(o => o.tipo === filtroTipoSimple);
+            }
+
             // Filtro por rango de fechas
             if (filtroFechaDesde) {
                 filtered = filtered.filter(o => o.fecha >= filtroFechaDesde);
@@ -1637,6 +1654,7 @@
                 }
             });
 
+            document.getElementById('filtroTipoSimple').value = 'todos';
             document.getElementById('filtroFechaDesde').value = '';
             document.getElementById('filtroFechaHasta').value = '';
             
@@ -1675,19 +1693,24 @@
             }
 
             // Preparar datos para Excel
-            const data = filteredOrders.map(order => ({
-                'Fecha': order.fecha,
-                'Cliente': order.cliente,
-                'Tipo': order.tipo === 'camaron' ? 'Camarón' : 'Hielo',
-                'Cantidad': order.tipo === 'camaron' ? order.cantidad.toFixed(2) + ' lb' : order.cantidad + ' sacos',
-                'Precio Unit.': order.tipo === 'camaron' ? '$' + order.precio.toFixed(3) + '/lb' : '$' + order.precio.toFixed(3) + '/saco',
-                'Total': '$' + order.total.toFixed(2),
-                'Comisión': '$' + order.comision.toFixed(2),
-                'Estado': order.estado === 'pagado' ? 'Pagado' : 'Pendiente',
-                'Fecha Factura': order.fechaFactura || '-',
-                'Fecha Pago': order.fechaPago || '-',
-                'Notas': order.notas || ''
-            }));
+            const data = filteredOrders.map(order => {
+                const bines = order.bines || 0;
+                
+                return {
+                    'Fecha': order.fecha,
+                    'Cliente': order.cliente,
+                    'Tipo': order.tipo === 'logistica' ? 'Logística' : 'Hielo',
+                    'Bines': order.tipo === 'logistica' ? bines : '-',
+                    'Cantidad': Math.round(order.cantidad),
+                    'Precio Unit.': order.precio.toFixed(3),
+                    'Total': order.total.toFixed(2),
+                    'Comisión': order.comision.toFixed(2),
+                    'Estado': order.estado === 'pagado' ? 'Pagado' : 'Pendiente',
+                    'Fecha Factura': order.fechaFactura || '-',
+                    'Fecha Pago': order.fechaPago || '-',
+                    'Notas': order.notas || ''
+                };
+            });
 
             // Crear worksheet
             const ws = XLSX.utils.json_to_sheet(data);
@@ -1696,9 +1719,10 @@
             const colWidths = [
                 { wch: 12 }, // Fecha
                 { wch: 20 }, // Cliente
-                { wch: 10 }, // Tipo
-                { wch: 15 }, // Cantidad
-                { wch: 15 }, // Precio Unit.
+                { wch: 12 }, // Tipo
+                { wch: 8 },  // Bines
+                { wch: 12 }, // Cantidad
+                { wch: 12 }, // Precio Unit.
                 { wch: 12 }, // Total
                 { wch: 12 }, // Comisión
                 { wch: 10 }, // Estado
@@ -1852,7 +1876,7 @@
                 clientStats[order.cliente].pedidos++;
                 clientStats[order.cliente].totalComisiones += order.comision;
 
-                if (order.tipo === 'camaron') {
+                if (order.tipo === 'logistica') {
                     clientStats[order.cliente].librasCamaron += order.cantidad;
                 } else {
                     clientStats[order.cliente].sacosHielo += order.cantidad;
@@ -1938,7 +1962,7 @@
         }
 
         function calculateFromBins() {
-            const bins = parseFloat(document.getElementById('cantidadBins').value) || 0;
+            const bins = parseFloat(document.getElementById('cantidadBines').value) || 0;
             const clientIndex = document.getElementById('cliente').value;
             
             if (bins > 0 && clientIndex !== '') {
@@ -1946,7 +1970,7 @@
                 const librasPorBin = client.librasPorBin || 1000;
                 const totalLibras = bins * librasPorBin;
                 
-                document.getElementById('libras').value = totalLibras;
+                document.getElementById('cantidadLogistica').value = totalLibras;
                 document.getElementById('binsInfo').textContent = 
                     `${bins} bins × ${librasPorBin} lb/bin = ${totalLibras.toLocaleString()} libras`;
                 
@@ -1956,14 +1980,14 @@
 
         function updateFormFields() {
             const tipo = document.getElementById('tipoPedido').value;
-            const camaronFields = document.getElementById('camaron-fields');
+            const logisticaFields = document.getElementById('logistica-fields');
             const hieloFields = document.getElementById('hielo-fields');
             
-            if (tipo === 'camaron') {
-                camaronFields.style.display = 'block';
+            if (tipo === 'logistica') {
+                logisticaFields.style.display = 'block';
                 hieloFields.style.display = 'none';
             } else {
-                camaronFields.style.display = 'none';
+                logisticaFields.style.display = 'none';
                 hieloFields.style.display = 'block';
             }
             
@@ -1992,8 +2016,8 @@
             if (clientIndex !== '') {
                 const client = window.clients[clientIndex];
                 
-                if (tipo === 'camaron') {
-                    document.getElementById('precioCamaron').value = client.precioCamaron.toFixed(3);
+                if (tipo === 'logistica') {
+                    document.getElementById('precioLogistica').value = client.precioCamaron.toFixed(3);
                     document.getElementById('clientPriceCamaron').textContent = 
                         `Precio: $${client.precioCamaron.toFixed(3)}/lb | ${client.librasPorBin || 1000} lb/bin`;
                 } else {
@@ -2010,12 +2034,12 @@
             const tipo = document.getElementById('tipoPedido').value;
             let total = 0;
             
-            if (tipo === 'camaron') {
-                const libras = parseFloat(document.getElementById('libras').value) || 0;
-                const precio = parseFloat(document.getElementById('precioCamaron').value) || 0;
+            if (tipo === 'logistica') {
+                const libras = parseFloat(document.getElementById('cantidadLogistica').value) || 0;
+                const precio = parseFloat(document.getElementById('precioLogistica').value) || 0;
                 total = libras * precio;
             } else {
-                const sacos = parseFloat(document.getElementById('sacos').value) || 0;
+                const sacos = parseFloat(document.getElementById('cantidadHielo').value) || 0;
                 const precio = parseFloat(document.getElementById('precioHielo').value) || 0;
                 total = sacos * precio;
             }
@@ -2043,11 +2067,12 @@
             }
             
             const client = window.clients[clientIndex];
-            let cantidad, precio, total;
+            let cantidad, precio, total, bines = 0;
             
-            if (tipo === 'camaron') {
-                cantidad = parseFloat(document.getElementById('libras').value) || 0;
-                precio = parseFloat(document.getElementById('precioCamaron').value) || 0;
+            if (tipo === 'logistica') {
+                bines = parseInt(document.getElementById('cantidadBines').value) || 0;
+                cantidad = parseFloat(document.getElementById('cantidadLogistica').value) || 0;
+                precio = parseFloat(document.getElementById('precioLogistica').value) || 0;
                 
                 if (cantidad <= 0 || precio <= 0) {
                     alert('Ingresa libras y precio');
@@ -2058,7 +2083,7 @@
                     client.precioCamaron = precio;
                 }
             } else {
-                cantidad = parseFloat(document.getElementById('sacos').value) || 0;
+                cantidad = parseFloat(document.getElementById('cantidadHielo').value) || 0;
                 precio = parseFloat(document.getElementById('precioHielo').value) || 0;
                 
                 if (cantidad <= 0 || precio <= 0) {
@@ -2079,6 +2104,7 @@
                 fecha,
                 cliente: client.nombre,
                 tipo,
+                bines,
                 cantidad,
                 precio,
                 total,
@@ -2091,12 +2117,13 @@
             await window.saveOrderToFirebase(order);
             
             // Clear form
-            document.getElementById('tipoPedido').value = 'camaron';
+            document.getElementById('tipoPedido').value = 'logistica';
             document.getElementById('cliente').value = '';
-            document.getElementById('cantidadBins').value = '';
-            document.getElementById('libras').value = '';
-            document.getElementById('precioCamaron').value = '';
-            document.getElementById('sacos').value = '';
+            document.getElementById('cantidadBines').value = '';
+            document.getElementById('cantidadBines').value = '';
+            document.getElementById('cantidadLogistica').value = '';
+            document.getElementById('precioLogistica').value = '';
+            document.getElementById('cantidadHielo').value = '';
             document.getElementById('precioHielo').value = '';
             document.getElementById('fecha').valueAsDate = new Date();
             document.getElementById('notas').value = '';
@@ -2152,7 +2179,7 @@
         }
 
 
-        function displayFilteredOrders(filteredOrders) {
+function displayFilteredOrders(filteredOrders) {
             const tbody = document.getElementById('ordersBody');
             const tfoot = document.getElementById('ordersFooter');
             const today = new Date();
@@ -2162,6 +2189,7 @@
             filteredOrders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
             
             // Variables para totales
+            let totalBines = 0;
             let totalCantidadCamaron = 0;
             let totalCantidadHielo = 0;
             let totalGeneral = 0;
@@ -2173,19 +2201,30 @@
                 // Acumular totales
                 totalGeneral += order.total;
                 totalComisiones += order.comision;
-                if (order.tipo === 'camaron') {
+                
+                // Calcular bines (solo para logística/logística)
+                const bines = order.tipo === 'logistica' ? Math.round(order.cantidad / (order.librasPorBin || 1)) : 0;
+                
+                if (order.tipo === 'logistica') {
                     totalCantidadCamaron += order.cantidad;
+                    totalBines += bines;
                 } else {
                     totalCantidadHielo += order.cantidad;
                 }
                 
-                const cantidadText = order.tipo === 'camaron' 
-                    ? `${order.cantidad.toFixed(2)} lb` 
-                    : `${order.cantidad} sacos`;
+                // Formato de cantidad (sin decimales, sin texto adicional)
+                const cantidadText = order.tipo === 'logistica' 
+                    ? Math.round(order.cantidad).toLocaleString('en-US')
+                    : Math.round(order.cantidad).toLocaleString('en-US');
                 
-                const precioText = order.tipo === 'camaron'
-                    ? `$${order.precio.toFixed(3)}/lb`
-                    : `$${order.precio.toFixed(3)}/saco`;
+                // Formato de precio (3 decimales, solo número)
+                const precioText = order.precio.toFixed(3);
+                
+                // Tipo sin emojis
+                const tipoText = order.tipo === 'logistica' ? 'Logística' : 'Hielo';
+                
+                // Bines (solo para logística)
+                const binesText = order.tipo === 'logistica' ? bines.toLocaleString('en-US') : '-';
                 
                 // Determinar estado
                 let statusClass, statusText;
@@ -2217,11 +2256,12 @@
                 row.innerHTML = `
                     <td>${order.fecha}</td>
                     <td>${order.cliente}</td>
-                    <td>${order.tipo === 'camaron' ? '🦐 Camarón' : '🧊 Hielo'}</td>
-                    <td>${cantidadText}</td>
-                    <td>${precioText}</td>
-                    <td>$${order.total.toFixed(2)}</td>
-                    <td><strong>$${order.comision.toFixed(2)}</strong></td>
+                    <td>${tipoText}</td>
+                    <td style="text-align: right;">${binesText}</td>
+                    <td style="text-align: right;">${cantidadText}</td>
+                    <td style="text-align: right;">${precioText}</td>
+                    <td style="text-align: right;">${order.total.toFixed(2)}</td>
+                    <td style="text-align: right;"><strong>${order.comision.toFixed(2)}</strong></td>
                     <td>${fechaFacturaHtml}</td>
                     <td>${fechaPagoHtml}</td>
                     <td><span class="status-badge ${statusClass}">${statusText}</span></td>
@@ -2254,22 +2294,26 @@
             });
             
             if (filteredOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 30px; color: #999;">No hay pedidos</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 30px; color: #999;">No hay pedidos</td></tr>';
                 tfoot.style.display = 'none';
             } else {
                 // Actualizar footer con totales
                 let cantidadText = '';
                 if (totalCantidadCamaron > 0 && totalCantidadHielo > 0) {
-                    cantidadText = `🦐 ${totalCantidadCamaron.toFixed(2)} lb<br>🧊 ${totalCantidadHielo} sacos`;
+                    cantidadText = `Logística: ${Math.round(totalCantidadCamaron).toLocaleString('en-US')}<br>Hielo: ${Math.round(totalCantidadHielo).toLocaleString('en-US')}`;
                 } else if (totalCantidadCamaron > 0) {
-                    cantidadText = `🦐 ${totalCantidadCamaron.toFixed(2)} lb`;
+                    cantidadText = Math.round(totalCantidadCamaron).toLocaleString('en-US');
                 } else if (totalCantidadHielo > 0) {
-                    cantidadText = `🧊 ${totalCantidadHielo} sacos`;
+                    cantidadText = Math.round(totalCantidadHielo).toLocaleString('en-US');
                 }
                 
+                // Footer Bines
+                const binesText = totalBines > 0 ? totalBines.toLocaleString('en-US') : '-';
+                
+                document.getElementById('footerBines').innerHTML = binesText;
                 document.getElementById('footerCantidad').innerHTML = cantidadText || '-';
-                document.getElementById('footerTotal').textContent = '$' + totalGeneral.toFixed(2);
-                document.getElementById('footerComision').textContent = '$' + totalComisiones.toFixed(2);
+                document.getElementById('footerTotal').textContent = totalGeneral.toFixed(2);
+                document.getElementById('footerComision').textContent = totalComisiones.toFixed(2);
                 
                 tfoot.style.display = 'table-footer-group';
             }
@@ -2479,7 +2523,7 @@
             const comisionesPendientes = filteredOrders.filter(o => o.estado === 'pendiente').reduce((sum, o) => sum + o.comision, 0);
             const comisionesPagadas = filteredOrders.filter(o => o.estado === 'pagado').reduce((sum, o) => sum + o.comision, 0);
             
-            const totalLibras = filteredOrders.filter(o => o.tipo === 'camaron').reduce((sum, o) => sum + o.cantidad, 0);
+            const totalLibras = filteredOrders.filter(o => o.tipo === 'logistica').reduce((sum, o) => sum + o.cantidad, 0);
             const totalSacos = filteredOrders.filter(o => o.tipo === 'hielo').reduce((sum, o) => sum + o.cantidad, 0);
             
             document.getElementById('totalComisiones').textContent = totalComisiones.toFixed(2);
@@ -2499,10 +2543,10 @@
             const comisionesPendientes = window.orders.filter(o => o.estado === 'pendiente').reduce((sum, o) => sum + o.comision, 0);
             const comisionesPagadas = window.orders.filter(o => o.estado === 'pagado').reduce((sum, o) => sum + o.comision, 0);
             
-            const totalLibras = window.orders.filter(o => o.tipo === 'camaron').reduce((sum, o) => sum + o.cantidad, 0);
+            const totalLibras = window.orders.filter(o => o.tipo === 'logistica').reduce((sum, o) => sum + o.cantidad, 0);
             const totalSacos = window.orders.filter(o => o.tipo === 'hielo').reduce((sum, o) => sum + o.cantidad, 0);
             
-            const pedidosCamaron = window.orders.filter(o => o.tipo === 'camaron').length;
+            const pedidosCamaron = window.orders.filter(o => o.tipo === 'logistica').length;
             const pedidosHielo = window.orders.filter(o => o.tipo === 'hielo').length;
             
             const pendientes = window.orders.filter(o => o.estado === 'pendiente');
@@ -2512,8 +2556,8 @@ _Fecha: ${new Date().toLocaleDateString('es-ES')}_
 
 *RESUMEN GENERAL*
 📦 Total Pedidos: ${window.orders.length}
-  🦐 Camarón: ${pedidosCamaron} pedidos
-  🧊 Hielo: ${pedidosHielo} pedidos
+  Logística: ${pedidosCamaron} pedidos
+  Hielo: ${pedidosHielo} pedidos
 
 *COMISIONES (1.5%)*
 💰 Total Generado: *$${totalComisiones.toFixed(2)}*
@@ -2521,13 +2565,13 @@ _Fecha: ${new Date().toLocaleDateString('es-ES')}_
 ✅ Pagadas: $${comisionesPagadas.toFixed(2)}
 
 *VOLUMEN DE VENTAS*
-🦐 Camarón: ${totalLibras.toFixed(2)} lb
-🧊 Hielo: ${totalSacos} sacos (${(totalSacos * 50).toLocaleString()} lb)
+Logística: ${totalLibras.toFixed(2)} lb
+Hielo: ${totalSacos} sacos (${(totalSacos * 50).toLocaleString()} lb)
 
 ${pendientes.length > 0 ? `*PENDIENTES DE COBRO*
 ${pendientes.map(o => 
 `• ${o.fecha} | ${o.cliente}
-  ${o.tipo === 'camaron' ? '🦐' : '🧊'} ${o.tipo === 'camaron' ? o.cantidad.toFixed(2) + ' lb' : o.cantidad + ' sacos'} → *$${o.comision.toFixed(2)}*`
+  ${o.tipo === 'logistica' ? '' : ''} ${o.tipo === 'logistica' ? o.cantidad.toFixed(2) + ' lb' : o.cantidad + ' sacos'} → *$${o.comision.toFixed(2)}*`
 ).join('\n')}
 
 *TOTAL A PAGAR: $${comisionesPendientes.toFixed(2)}*` : '_No hay comisiones pendientes_ ✅'}
