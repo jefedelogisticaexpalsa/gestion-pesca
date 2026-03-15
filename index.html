@@ -1141,11 +1141,15 @@
             
             <div id="editLogisticaFields">
                 <div class="form-group">
+                    <label>Cantidad de Bines</label>
+                    <input type="number" id="editCantidadBines" min="1" oninput="recalculateEdit()">
+                </div>
+                <div class="form-group">
                     <label>Libras de Logística</label>
                     <input type="number" id="editCantidadLogistica" step="0.01" oninput="recalculateEdit()">
                 </div>
                 <div class="form-group">
-                    <label>Precio por Libra (Logística) ($)</label>
+                    <label>Precio por Libra ($)</label>
                     <input type="number" id="editPrecioLogistica" step="0.001" oninput="recalculateEdit()">
                 </div>
             </div>
@@ -1171,7 +1175,7 @@
                 <strong>Comisión (1.5%):</strong> $<span id="editComisionCalc">0.00</span>
             </div>
             
-            <button class="btn" onclick="saveEditedOrder()">💾 Guardar Cambios</button>
+            <button type="button" class="btn" onclick="saveEditedOrder()">💾 Guardar Cambios</button>
         </div>
     </div>
 
