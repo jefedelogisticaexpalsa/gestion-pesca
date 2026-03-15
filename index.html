@@ -1011,11 +1011,12 @@
                 <h3>📅 Filtros</h3>
                 <div class="date-inputs">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Tipo</label>
-                        <select id="resumenFiltroTipo" onchange="updateSummary()">
+                        <label>Estado</label>
+                        <select id="resumenFiltroEstado" onchange="updateSummary()">
                             <option value="todos">Todos</option>
-                            <option value="logistica">Logística</option>
-                            <option value="hielo">Hielo</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="pagado">Pagados</option>
+                            <option value="vencido">Vencidos</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
@@ -1826,7 +1827,7 @@
 
         // Limpiar filtro de resumen
         function clearSummaryFilter() {
-            document.getElementById('resumenFiltroTipo').value = 'todos';
+            document.getElementById('resumenFiltroEstado').value = 'todos';
             document.getElementById('resumenFechaDesde').value = '';
             document.getElementById('resumenFechaHasta').value = '';
             updateSummary();
@@ -1840,15 +1841,26 @@
             
             if (!tbody) return;
 
-            const filtroTipo = document.getElementById('resumenFiltroTipo')?.value;
+            const filtroEstado = document.getElementById('resumenFiltroEstado')?.value;
             const fechaDesde = document.getElementById('resumenFechaDesde')?.value;
             const fechaHasta = document.getElementById('resumenFechaHasta')?.value;
 
             let filteredOrders = [...window.orders];
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-            // Aplicar filtro de tipo
-            if (filtroTipo && filtroTipo !== 'todos') {
-                filteredOrders = filteredOrders.filter(o => o.tipo === filtroTipo);
+            // Aplicar filtro de estado
+            if (filtroEstado && filtroEstado !== 'todos') {
+                if (filtroEstado === 'vencido') {
+                    filteredOrders = filteredOrders.filter(o => {
+                        if (o.estado === 'pagado' || !o.fechaPago) return false;
+                        const fechaPago = new Date(o.fechaPago);
+                        return fechaPago < today;
+                    });
+                } else {
+                    filteredOrders = filteredOrders.filter(o => o.estado === filtroEstado);
+                }
             }
 
             // Aplicar filtro de fechas
@@ -2505,15 +2517,26 @@ function displayFilteredOrders(filteredOrders) {
 
         
         function updateSummary() {
-            const filtroTipo = document.getElementById('resumenFiltroTipo')?.value;
+            const filtroEstado = document.getElementById('resumenFiltroEstado')?.value;
             const fechaDesde = document.getElementById('resumenFechaDesde')?.value;
             const fechaHasta = document.getElementById('resumenFechaHasta')?.value;
 
             let filteredOrders = [...window.orders];
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-            // Aplicar filtro de tipo
-            if (filtroTipo && filtroTipo !== 'todos') {
-                filteredOrders = filteredOrders.filter(o => o.tipo === filtroTipo);
+            // Aplicar filtro de estado
+            if (filtroEstado && filtroEstado !== 'todos') {
+                if (filtroEstado === 'vencido') {
+                    filteredOrders = filteredOrders.filter(o => {
+                        if (o.estado === 'pagado' || !o.fechaPago) return false;
+                        const fechaPago = new Date(o.fechaPago);
+                        return fechaPago < today;
+                    });
+                } else {
+                    filteredOrders = filteredOrders.filter(o => o.estado === filtroEstado);
+                }
             }
 
             // Aplicar filtro de fechas
