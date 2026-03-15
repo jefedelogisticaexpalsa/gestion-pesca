@@ -901,15 +901,6 @@
                 </div>
                 
                 <div class="filter-group">
-                    <label>Tipo (simple)</label>
-                    <select id="filtroTipoSimple" onchange="filterOrders()">
-                        <option value="todos">Todos</option>
-                        <option value="logistica">Logística</option>
-                        <option value="hielo">Hielo</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
                     <label>Desde Fecha</label>
                     <input type="date" id="filtroFechaDesde" onchange="filterOrders()">
                 </div>
@@ -1017,8 +1008,16 @@
             
             <!-- Filtro de fechas -->
             <div class="date-filter-section">
-                <h3>📅 Filtro por Rango de Fechas</h3>
+                <h3>📅 Filtros</h3>
                 <div class="date-inputs">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Tipo</label>
+                        <select id="resumenFiltroTipo" onchange="updateSummary()">
+                            <option value="todos">Todos</option>
+                            <option value="logistica">Logística</option>
+                            <option value="hielo">Hielo</option>
+                        </select>
+                    </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label>Desde</label>
                         <input type="date" id="resumenFechaDesde">
@@ -1587,7 +1586,6 @@
             const filtroEstado = getMultiSelectValues('filtroEstado');
             const filtroCliente = getMultiSelectValues('filtroCliente');
             const filtroTipo = getMultiSelectValues('filtroTipo');
-            const filtroTipoSimple = document.getElementById('filtroTipoSimple')?.value;
             const filtroFechaDesde = document.getElementById('filtroFechaDesde')?.value;
             const filtroFechaHasta = document.getElementById('filtroFechaHasta')?.value;
 
@@ -1626,11 +1624,6 @@
                 filtered = filtered.filter(o => filtroTipo.includes(o.tipo));
             }
 
-            // Filtro por tipo simple (adicional)
-            if (filtroTipoSimple && filtroTipoSimple !== 'todos') {
-                filtered = filtered.filter(o => o.tipo === filtroTipoSimple);
-            }
-
             // Filtro por rango de fechas
             if (filtroFechaDesde) {
                 filtered = filtered.filter(o => o.fecha >= filtroFechaDesde);
@@ -1654,7 +1647,6 @@
                 }
             });
 
-            document.getElementById('filtroTipoSimple').value = 'todos';
             document.getElementById('filtroFechaDesde').value = '';
             document.getElementById('filtroFechaHasta').value = '';
             
@@ -1834,6 +1826,7 @@
 
         // Limpiar filtro de resumen
         function clearSummaryFilter() {
+            document.getElementById('resumenFiltroTipo').value = 'todos';
             document.getElementById('resumenFechaDesde').value = '';
             document.getElementById('resumenFechaHasta').value = '';
             updateSummary();
@@ -1847,10 +1840,16 @@
             
             if (!tbody) return;
 
+            const filtroTipo = document.getElementById('resumenFiltroTipo')?.value;
             const fechaDesde = document.getElementById('resumenFechaDesde')?.value;
             const fechaHasta = document.getElementById('resumenFechaHasta')?.value;
 
             let filteredOrders = [...window.orders];
+
+            // Aplicar filtro de tipo
+            if (filtroTipo && filtroTipo !== 'todos') {
+                filteredOrders = filteredOrders.filter(o => o.tipo === filtroTipo);
+            }
 
             // Aplicar filtro de fechas
             if (fechaDesde) {
@@ -2506,10 +2505,16 @@ function displayFilteredOrders(filteredOrders) {
 
         
         function updateSummary() {
+            const filtroTipo = document.getElementById('resumenFiltroTipo')?.value;
             const fechaDesde = document.getElementById('resumenFechaDesde')?.value;
             const fechaHasta = document.getElementById('resumenFechaHasta')?.value;
 
             let filteredOrders = [...window.orders];
+
+            // Aplicar filtro de tipo
+            if (filtroTipo && filtroTipo !== 'todos') {
+                filteredOrders = filteredOrders.filter(o => o.tipo === filtroTipo);
+            }
 
             // Aplicar filtro de fechas
             if (fechaDesde) {
