@@ -2217,8 +2217,8 @@ function displayFilteredOrders(filteredOrders) {
                 totalGeneral += order.total;
                 totalComisiones += order.comision;
                 
-                // Calcular bines (solo para logística/logística)
-                const bines = order.tipo === 'logistica' ? Math.round(order.cantidad / (order.librasPorBin || 1)) : 0;
+                // Obtener bines del pedido (valor ingresado manualmente)
+                const bines = order.bines || 0;
                 
                 if (order.tipo === 'logistica') {
                     totalCantidadCamaron += order.cantidad;
