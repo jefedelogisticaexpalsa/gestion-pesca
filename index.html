@@ -1,2671 +1,983 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Pesca y Hielo - Cloud</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            text-align: center;
-            position: relative;
-        }
-
-        .header h1 {
-            color: #667eea;
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .user-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid #667eea;
-        }
-
-        .user-name {
-            font-size: 14px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .sync-status {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-
-        .sync-online {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .sync-offline {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .sync-loading {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            flex: 1;
-            min-width: 150px;
-            padding: 15px;
-            background: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .tab-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .content {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            display: none;
-        }
-
-        .content.active {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border 0.3s;
-            font-family: inherit;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            width: 100%;
-            transition: transform 0.2s;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            margin-top: 10px;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background: #f8f9fa;
-        }
-
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .status-paid {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-vencido {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .action-btn {
-            padding: 6px 12px;
-            margin: 2px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .btn-pay {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-        }
-
-        .summary-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-
-        .summary-card h3 {
-            font-size: 16px;
-            margin-bottom: 10px;
-            opacity: 0.9;
-        }
-
-        .summary-card .amount {
-            font-size: 32px;
-            font-weight: 700;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .client-price {
-            font-size: 13px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .two-column {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-
-        .login-box h1 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 32px;
-        }
-
-        .login-box p {
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .google-btn {
-            background: white;
-            border: 2px solid #e0e0e0;
-            padding: 15px 30px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            transition: all 0.3s;
-        }
-
-        .google-btn:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-        }
-
-        .google-icon {
-            width: 24px;
-            height: 24px;
-        }
-
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(102, 126, 234, 0.95);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            flex-direction: column;
-            color: white;
-        }
-
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 4px solid white;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-            .user-info {
-                position: static;
-                justify-content: center;
-                margin-top: 15px;
-            }
-
-            .tabs {
-                flex-direction: column;
-            }
-
-            .tab-btn {
-                width: 100%;
-            }
-
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .two-column {
-                grid-template-columns: 1fr;
-            }
-        }
-    
-        /* Modal para editar pedidos */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            overflow: auto;
-        }
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        .modal-header h3 {
-            color: #667eea;
-            font-size: 22px;
-        }
-        .close-modal {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .filters-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-        .filter-group label {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        .filter-group select,
-        .filter-group input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        .btn-export {
-            background: #28a745;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        .btn-export:hover {
-            background: #218838;
-            transform: translateY(-2px);
-        }
-
-        .date-filter-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        .date-filter-section h3 {
-            color: #333;
-            font-size: 18px;
-            margin-bottom: 15px;
-        }
-        .date-inputs {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 15px;
-            align-items: end;
-        }
-        .btn-filter {
-            background: #667eea;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .btn-clear-filter {
-            background: #6c757d;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        /* Multi-select styling */
-        .multi-select {
-            min-height: 38px;
-            max-height: 120px;
-            overflow-y: auto;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 5px;
-            background: white;
-        }
-        .multi-select option {
-            padding: 8px;
-            cursor: pointer;
-            border-radius: 4px;
-            margin: 2px 0;
-        }
-        .multi-select option:checked {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .multi-select option:hover {
-            background: #f0f0f0;
-        }
-        .selected-items {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 5px;
-            min-height: 20px;
-        }
-        .selected-tag {
-            background: #667eea;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .selected-tag .remove-tag {
-            cursor: pointer;
-            font-weight: bold;
-            opacity: 0.8;
-        }
-        .selected-tag .remove-tag:hover {
-            opacity: 1;
-        }
-        .filter-label-with-count {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .filter-count {
-            background: #667eea;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        /* Tabla de resumen por cliente */
-        .client-summary-table-container {
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin-top: 20px;
-        }
-        .client-summary-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .client-summary-table thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .client-summary-table th {
-            color: white;
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .client-summary-table th:last-child {
-            text-align: right;
-        }
-        .client-summary-table tbody tr {
-            border-bottom: 1px solid #e0e0e0;
-            transition: background 0.2s;
-        }
-        .client-summary-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-        .client-summary-table tbody tr:last-child {
-            border-bottom: none;
-        }
-        .client-summary-table td {
-            padding: 15px;
-            color: #333;
-            font-size: 14px;
-        }
-        .client-summary-table .client-name {
-            font-weight: 600;
-            color: #667eea;
-            font-size: 15px;
-        }
-        .client-summary-table .number-cell {
-            text-align: right;
-            font-weight: 500;
-        }
-        .client-summary-table .total-cell {
-            font-weight: 700;
-            color: #28a745;
-            font-size: 15px;
-        }
-        .client-summary-table tfoot {
-            background: #f8f9fa;
-            border-top: 2px solid #667eea;
-        }
-        .client-summary-table tfoot td {
-            padding: 15px;
-            font-weight: 700;
-            font-size: 15px;
-            color: #333;
-        }
-        .client-summary-table tfoot .total-label {
-            color: #667eea;
-        }
-        .client-summary-table tfoot .total-value {
-            color: #28a745;
-            text-align: right;
-        }
-        .summary-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 30px;
-            margin-bottom: 15px;
-        }
-        .summary-section-header h3 {
-            color: #333;
-            font-size: 20px;
-        }
-        .summary-section-header .summary-info {
-            font-size: 13px;
-            color: #666;
-            background: #f0f0f0;
-            padding: 5px 12px;
-            border-radius: 15px;
-        }
-        
-        /* Evitar scroll accidental en inputs numéricos */
-        input[type="number"] {
-            -moz-appearance: textfield; /* Firefox */
-        }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        /* Evitar que el scroll del mouse cambie valores en inputs cuando están enfocados */
-        input[type="number"]:focus {
-            pointer-events: none;
-        }
-        input[type="number"]:hover {
-            pointer-events: auto;
-        }
-        
-        @media (max-width: 768px) {
-            .client-summary-table {
-                font-size: 12px;
-            }
-            .client-summary-table th,
-            .client-summary-table td {
-                padding: 10px 8px;
-            }
-        }
-
-        /* Footer de tabla de pedidos con totales */
-        #ordersFooter td {
-            font-size: 15px;
-        }
-        #ordersFooter #footerCantidad {
-            font-weight: 600;
-            color: #333;
-            line-height: 1.6;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitácora de Seguridad – FJ Logística</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, Arial, sans-serif; background: #f3f4f6; color: #374151; font-size: 13px; }
+
+/* LOGIN */
+#loginPage { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg,#1b4332,#2d6a4f 60%,#52796f); }
+#loginCard { background: white; border-radius: 12px; padding: 36px 32px 28px; width: 360px; box-shadow: 0 8px 40px rgba(0,0,0,.25); }
+#loginLogoWrap { display: flex; justify-content: center; margin-bottom: 20px; }
+#loginLogoBox { background: #D62B2B; border-radius: 8px; padding: 7px 13px; display: flex; align-items: center; gap: 7px; }
+#loginLogoFJ { font-size: 22px; font-weight: 800; color: white; letter-spacing: -1px; }
+#loginLogoTxt { font-size: 9px; color: white; font-weight: 600; line-height: 1.3; }
+#loginTitle { text-align: center; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+#loginSub { text-align: center; font-size: 12px; color: #6b7280; margin-bottom: 20px; }
+#loginErr { display: none; background: #fdecea; border: 1px solid #fca5a5; border-radius: 6px; color: #991b1b; font-size: 12px; padding: 8px 12px; margin-bottom: 12px; }
+.loginField { margin-bottom: 14px; }
+.loginField label { display: block; font-size: 11px; font-weight: 700; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.loginField input { width: 100%; padding: 9px 12px; border: 1.5px solid #e5e7eb; border-radius: 6px; font-size: 13px; background: #f9fafb; }
+.loginField input:focus { outline: none; border-color: #2d6a4f; background: white; }
+#loginBtn { width: 100%; padding: 11px; background: #2d6a4f; color: white; border: none; border-radius: 7px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+#loginBtn:hover { background: #1b4332; }
+
+/* APP */
+#appPage { display: none; min-height: 100vh; }
+
+/* TOPBAR */
+#topbar { background: white; border-bottom: 1px solid #e5e7eb; height: 48px; display: flex; align-items: center; padding: 0 20px; gap: 10px; position: sticky; top: 0; z-index: 200; }
+#topLogoBox { background: #D62B2B; border-radius: 6px; padding: 5px 11px; display: flex; align-items: center; gap: 6px; }
+#topLogoFJ { font-size: 16px; font-weight: 800; color: white; letter-spacing: -1px; }
+#topLogoTxt { font-size: 8px; color: white; font-weight: 600; line-height: 1.2; }
+#topDivider { width: 1px; height: 24px; background: #e5e7eb; margin: 0 4px; }
+#topRight { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+#topUsername { font-size: 13px; font-weight: 600; color: #374151; }
+#topRoleBadge { font-size: 10px; font-weight: 700; background: #e8f5e9; color: #1b4332; border-radius: 10px; padding: 2px 8px; text-transform: uppercase; }
+#topLogoutBtn { background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer; color: #6b7280; }
+#topLogoutBtn:hover { background: #f9fafb; }
+
+/* CONTENT */
+#mainContent { max-width: 1300px; margin: 0 auto; padding: 20px 18px 40px; }
+#breadcrumb { font-size: 11px; color: #6b7280; margin-bottom: 10px; }
+#pageTitle { font-size: 20px; font-weight: 700; margin-bottom: 3px; }
+#pageSub { font-size: 12px; color: #6b7280; margin-bottom: 14px; }
+#alertBanner { background: #2d6a4f; color: white; border-radius: 7px; padding: 9px 15px; font-size: 12px; font-weight: 500; margin-bottom: 14px; }
+
+/* TABS */
+#tabsBar { display: flex; border-bottom: 2px solid #e5e7eb; flex-wrap: wrap; margin-bottom: 0; }
+.tabBtn { padding: 9px 18px; border: none; background: none; font-size: 13px; font-weight: 500; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tabBtn.active { color: #1b4332; font-weight: 700; border-bottom-color: #2d6a4f; }
+.tabBtn:hover { color: #374151; background: #f9fafb; border-radius: 6px 6px 0 0; }
+
+/* CARD */
+.tabCard { background: white; border: 1px solid #e5e7eb; border-radius: 0 8px 8px 8px; padding: 22px 20px 18px; }
+
+/* SECTION LABEL */
+.sectionLabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #52796f; margin: 18px 0 9px; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
+.sectionLabel:first-child { margin-top: 0; }
+
+/* GRIDS */
+.grid2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.grid6 { display: grid; grid-template-columns: repeat(6,1fr); gap: 12px; }
+@media(max-width:700px){ .grid2,.grid3,.grid4,.grid6 { grid-template-columns: 1fr 1fr; } }
+@media(max-width:420px){ .grid2,.grid3,.grid4,.grid6 { grid-template-columns: 1fr; } }
+
+/* FIELD */
+.formField { display: flex; flex-direction: column; gap: 3px; }
+.formField label { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .4px; }
+.formField input, .formField select, .formField textarea { border: 1px solid #e5e7eb; border-radius: 5px; padding: 7px 10px; font-size: 13px; color: #374151; background: #f9fafb; width: 100%; }
+.formField input:focus, .formField select:focus, .formField textarea:focus { outline: none; border-color: #2d6a4f; background: white; box-shadow: 0 0 0 3px rgba(45,106,79,.08); }
+.formField textarea { resize: vertical; min-height: 60px; }
+
+/* TOGGLE */
+.toggleGroup { display: inline-flex; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+.toggleGroup input[type=radio] { display: none; }
+.toggleGroup label { padding: 7px 22px; font-size: 12px; font-weight: 600; cursor: pointer; background: white; color: #6b7280; }
+.toggleGroup input[type=radio]:checked + label { background: #2d6a4f; color: white; }
+
+/* CHECKLIST */
+.checkRow { display: flex; align-items: center; gap: 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 5px; padding: 8px 12px; }
+.checkRowLabel { font-size: 12px; font-weight: 600; flex: 1; color: #374151; }
+.checkOpts { display: flex; gap: 12px; }
+.checkOpts label { display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; color: #6b7280; }
+.checkOpts input[type=radio] { accent-color: #2d6a4f; width: 13px; height: 13px; }
+
+/* BUTTONS */
+.btnRow { display: flex; gap: 8px; margin-top: 18px; justify-content: flex-end; flex-wrap: wrap; }
+.btnPrimary { padding: 8px 22px; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; background: #2d6a4f; color: white; }
+.btnPrimary:hover { background: #1b4332; }
+.btnSecondary { padding: 8px 22px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; background: white; color: #374151; }
+.btnSecondary:hover { background: #f9fafb; }
+.btnSuccess { padding: 6px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: #059669; color: white; }
+.btnSuccess:hover { background: #047857; }
+.btnDanger { padding: 6px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: #dc2626; color: white; }
+.btnDanger:hover { background: #b91c1c; }
+.btnSmSec { padding: 5px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; background: white; color: #374151; }
+.btnSmSec:hover { background: #f9fafb; }
+.btnExcel { padding: 7px 16px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: #1D6F42; color: white; display: flex; align-items: center; gap: 6px; }
+.btnExcel:hover { background: #155734; }
+
+/* TABLE */
+.tableTopBar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+.tableTitle { font-size: 14px; font-weight: 700; color: #374151; }
+.tableWrap { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1400px; }
+table thead { position: sticky; top: 0; z-index: 10; }
+table thead tr:first-child { background: #2d6a4f; color: white; }
+table thead tr:first-child th { padding: 9px 8px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; white-space: nowrap; }
+/* FILTER ROW */
+table thead tr.filterRow { background: #f0fdf4; }
+table thead tr.filterRow th { padding: 3px 4px; }
+table thead tr.filterRow input, table thead tr.filterRow select {
+  width: 100%; padding: 3px 5px; border: 1px solid #d1fae5; border-radius: 4px;
+  font-size: 11px; background: white; color: #374151;
+}
+table thead tr.filterRow input:focus, table thead tr.filterRow select:focus { outline: none; border-color: #2d6a4f; }
+
+table tbody tr:hover { background: #f0fdf4; }
+table tbody tr:nth-child(even) { background: #fafafa; }
+table tbody tr:nth-child(even):hover { background: #f0fdf4; }
+table tbody td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; white-space: nowrap; }
+.emptyRow td { text-align: center; color: #9ca3af; padding: 28px; font-style: italic; white-space: normal; }
+
+/* BADGES */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.badgeEntrada { background: #d1fae5; color: #065f46; }
+.badgeSalida { background: #fee2e2; color: #991b1b; }
+.badgeAdmin { background: #fef3c7; color: #92400e; }
+.badgeUsuario { background: #dbeafe; color: #1e40af; }
+.badgeSupervisor { background: #ede9fe; color: #5b21b6; }
+.badgeActivo { background: #d1fae5; color: #065f46; }
+
+/* SEARCH */
+#histSearch { width: 100%; padding: 7px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; background: white; margin-bottom: 8px; }
+#histSearch:focus { outline: none; border-color: #2d6a4f; }
+
+/* ACTION MENU (3 dots) */
+.actionCell { position: relative; text-align: center; }
+.dotsBtn { background: none; border: 1px solid #e5e7eb; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 14px; color: #6b7280; line-height: 1; }
+.dotsBtn:hover { background: #f3f4f6; }
+.actionMenu { position: absolute; right: 0; top: 100%; background: white; border: 1px solid #e5e7eb; border-radius: 7px; box-shadow: 0 4px 16px rgba(0,0,0,.12); z-index: 300; min-width: 140px; padding: 4px 0; }
+.actionMenu button { display: block; width: 100%; text-align: left; padding: 8px 14px; border: none; background: none; font-size: 12px; cursor: pointer; color: #374151; }
+.actionMenu button:hover { background: #f3f4f6; }
+.actionMenu button.danger { color: #dc2626; }
+.actionMenu button:disabled { color: #9ca3af; cursor: not-allowed; }
+.actionMenu button:disabled:hover { background: none; }
+
+/* CONFIG */
+.cfgBox { background: #fffbeb; border: 1px solid #fde68a; border-radius: 7px; padding: 14px 16px; margin-bottom: 13px; font-size: 13px; }
+.cfgBox strong { color: #78350f; }
+.cfgBox input { margin-top: 7px; width: 100%; padding: 8px 11px; border: 1px solid #fde68a; border-radius: 5px; font-size: 13px; background: #fffdf0; }
+.cfgUrlRow { display: flex; gap: 8px; margin-top: 7px; }
+.cfgUrlRow input { flex: 1; padding: 8px 11px; border: 1px solid #fde68a; border-radius: 5px; font-size: 13px; background: #fffdf0; }
+.btnSaveUrl { padding: 8px 18px; background: #2d6a4f; color: white; border: none; border-radius: 5px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.btnSaveUrl:hover { background: #1b4332; }
+.cfgStatus { font-size: 11px; margin-top: 6px; color: #6b7280; }
+.cfgStatus.ok { color: #065f46; font-weight: 600; }
+.cfgStatus.err { color: #991b1b; }
+.infoBox { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 7px; padding: 14px 16px; font-size: 13px; line-height: 1.8; margin-bottom: 13px; }
+.infoBox strong { color: #0c4a6e; }
+.codeBox { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 7px; padding: 14px 16px; }
+.codeBox strong { font-size: 13px; color: #374151; display: block; margin-bottom: 7px; }
+pre { font-size: 11px; overflow-x: auto; line-height: 1.6; font-family: 'Courier New', monospace; white-space: pre-wrap; }
+code { font-family: 'Courier New', monospace; background: #f3f4f6; padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+
+/* TOAST */
+#toastEl { position: fixed; bottom: 18px; right: 18px; background: #1f2937; color: white; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 9999; max-width: 300px; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+#toastEl.show { opacity: 1; }
+#toastEl.toastOk { background: #065f46; }
+#toastEl.toastErr { background: #991b1b; }
+
+/* SPINNER */
+.spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.35); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 4px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* MODAL */
+#modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 16px; }
+#modalBox { background: white; border-radius: 10px; padding: 22px 20px; width: 100%; max-width: 420px; box-shadow: 0 8px 36px rgba(0,0,0,.18); max-height: 90vh; overflow-y: auto; }
+#modalTitle { font-size: 15px; font-weight: 700; margin-bottom: 13px; padding-bottom: 9px; border-bottom: 1px solid #e5e7eb; }
+.modalField { margin-bottom: 11px; }
+.modalField label { display: block; font-size: 11px; font-weight: 700; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .4px; }
+.modalField input, .modalField select { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 5px; font-size: 13px; background: #f9fafb; }
+.modalField input:focus, .modalField select:focus { outline: none; border-color: #2d6a4f; }
+#modalBtns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; padding-top: 11px; border-top: 1px solid #e5e7eb; }
+
+/* EDIT RECORD MODAL */
+#editRecordOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 16px; }
+#editRecordBox { background: white; border-radius: 10px; padding: 22px 20px; width: 100%; max-width: 700px; box-shadow: 0 8px 36px rgba(0,0,0,.18); max-height: 92vh; overflow-y: auto; }
+#editRecordTitle { font-size: 15px; font-weight: 700; margin-bottom: 14px; padding-bottom: 9px; border-bottom: 1px solid #e5e7eb; }
+#editRecordBtns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; padding-top: 11px; border-top: 1px solid #e5e7eb; }
+</style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div id="loginScreen" class="login-screen">
-        <div class="login-box">
-            <h1>Gestión de Pesca</h1>
-            <p>Inicia sesión para acceder a tus datos en la nube</p>
-            
-            <button id="googleSignInBtn" class="google-btn">
-                <svg class="google-icon" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Continuar con Google
-            </button>
 
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                <p style="font-size: 12px; color: #999; margin-bottom: 10px;">¿No quieres iniciar sesión?</p>
-                <button onclick="useAnonymousMode()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">
-                    Usar modo anónimo (solo este dispositivo)
-                </button>
-            </div>
-        </div>
+<!-- LOGIN -->
+<div id="loginPage">
+  <div id="loginCard">
+    <div id="loginLogoWrap"><div id="loginLogoBox"><span id="loginLogoFJ">FJ</span><div id="loginLogoTxt">Logística<br>Ecuatoriana</div></div></div>
+    <div id="loginTitle">Bitácora de Seguridad</div>
+    <div id="loginSub">Ingresa tus credenciales para continuar</div>
+    <div id="loginErr">Usuario o contraseña incorrectos</div>
+    <div class="loginField"><label>Usuario</label><input type="text" id="inputUser" placeholder="Nombre de usuario" autocomplete="username"></div>
+    <div class="loginField"><label>Contraseña</label><input type="password" id="inputPass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button id="loginBtn" onclick="doLogin()">Ingresar →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appPage">
+  <div id="topbar">
+    <div id="topLogoBox"><span id="topLogoFJ">FJ</span><div id="topLogoTxt">Logística<br>Ecuatoriana</div></div>
+    <div id="topDivider"></div>
+    <div id="topRight">
+      <span id="topUsername"></span>
+      <span id="topRoleBadge"></span>
+      <button id="topLogoutBtn" onclick="doLogout()">↩ Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div id="mainContent">
+    <div id="breadcrumb">Seguridad / Transacciones / Bitácora de Seguridad</div>
+    <div id="pageTitle">Bitácora de Seguridad</div>
+    <div id="pageSub">Control de ingreso y salida de personal y vehículos</div>
+    <div id="alertBanner">🛡️ Sistema activo — Registro de movimientos en tiempo real</div>
+
+    <div id="tabsBar">
+      <button class="tabBtn active" id="tabBtnReg" onclick="showTab('reg')">Nuevo Registro</button>
+      <button class="tabBtn" id="tabBtnHis" onclick="showTab('his')">Historial</button>
+      <button class="tabBtn" id="tabBtnUsr" onclick="showTab('usr')" style="display:none">Gestión de Usuarios</button>
+      <button class="tabBtn" id="tabBtnCfg" onclick="showTab('cfg')" style="display:none">Configuración</button>
     </div>
 
-    <!-- Loading Screen -->
-    <div id="loadingScreen" class="loading-screen" style="display: none;">
-        <div class="spinner"></div>
-        <h2>Cargando tus datos...</h2>
-        <p style="margin-top: 10px; opacity: 0.9;">Sincronizando con Firebase</p>
+    <!-- ── REGISTRO ── -->
+    <div class="tabCard" id="tab-reg">
+      <div class="sectionLabel">Datos Generales</div>
+      <div class="grid6">
+        <div class="formField"><label>Fecha *</label><input type="date" id="fFecha"></div>
+        <div class="formField"><label>Hora *</label><input type="time" id="fHora"></div>
+        <div class="formField"><label>Guardia *</label><input type="text" id="fGuardia" placeholder="Nombre del guardia"></div>
+        <div class="formField"><label>Turno</label>
+          <select id="fTurno"><option value="">-- Seleccionar --</option><option value="DÍA">DÍA</option><option value="NOCHE">NOCHE</option></select>
+        </div>
+        <div class="formField"><label>Guía</label><input type="text" id="fGuia" placeholder="Nro. de guía"></div>
+        <div class="formField"><label>Compañía</label><input type="text" id="fCompania" placeholder="Empresa"></div>
+      </div>
+
+      <div class="sectionLabel">Tipo de Movimiento</div>
+      <div class="toggleGroup">
+        <input type="radio" name="fTipo" id="fEntrada" value="ENTRADA" checked><label for="fEntrada">▲ ENTRADA</label>
+        <input type="radio" name="fTipo" id="fSalida" value="SALIDA"><label for="fSalida">▼ SALIDA</label>
+      </div>
+
+      <div class="sectionLabel">Datos de Persona</div>
+      <div class="grid2">
+        <div class="formField"><label>Nombre / Apellido *</label><input type="text" id="fNombre" placeholder="Nombre completo"></div>
+        <div class="formField"><label>Retorno / Destino</label><input type="text" id="fDestino" placeholder="Lugar de retorno o destino"></div>
+      </div>
+
+      <div class="sectionLabel">Datos de Vehículo</div>
+      <div class="grid4">
+        <div class="formField"><label>Placa</label><input type="text" id="fPlaca" placeholder="ABC-1234" style="text-transform:uppercase"></div>
+        <div class="formField"><label>Disco</label><input type="text" id="fDisco" placeholder="Nro. disco"></div>
+        <div class="formField"><label>Kilometraje</label><input type="number" id="fKm" placeholder="0" min="0"></div>
+        <div class="formField"><label>Combustible</label>
+          <select id="fComb"><option value="">-- Seleccionar --</option><option>1/4</option><option>1/2</option><option>3/4</option><option>Lleno</option><option>Vacío</option></select>
+        </div>
+      </div>
+
+      <div class="sectionLabel">Checklist de Equipos</div>
+      <div class="grid3">
+        <div class="checkRow"><span class="checkRowLabel">Llanta Emergencia</span><div class="checkOpts"><label><input type="radio" name="fLlanta" value="Sí"> Sí</label><label><input type="radio" name="fLlanta" value="No" checked> No</label></div></div>
+        <div class="checkRow"><span class="checkRowLabel">Extintor</span><div class="checkOpts"><label><input type="radio" name="fExtintor" value="Sí"> Sí</label><label><input type="radio" name="fExtintor" value="No" checked> No</label></div></div>
+        <div class="checkRow"><span class="checkRowLabel">Kit Emergencia</span><div class="checkOpts"><label><input type="radio" name="fKit" value="Sí"> Sí</label><label><input type="radio" name="fKit" value="No" checked> No</label></div></div>
+      </div>
+
+      <div class="sectionLabel">Inventario</div>
+      <div class="grid3">
+        <div class="formField"><label>Bines</label><input type="number" id="fBines" placeholder="0" min="0"></div>
+        <div class="formField"><label>Sacos</label><input type="number" id="fSacos" placeholder="0" min="0"></div>
+        <div class="formField"><label>Gavetas</label><input type="number" id="fGavetas" placeholder="0" min="0"></div>
+      </div>
+
+      <div class="sectionLabel">Observaciones</div>
+      <div class="formField"><textarea id="fObs" placeholder="Ingrese cualquier observación adicional..."></textarea></div>
+
+      <div class="btnRow">
+        <button class="btnSecondary" onclick="limpiarForm()">Limpiar</button>
+        <button class="btnPrimary" id="btnGuardar" onclick="guardarRegistro()">Guardar Registro</button>
+      </div>
     </div>
 
-    <!-- Main App -->
-    <div class="container" id="mainContainer" style="display: none;">
-        <div class="header">
-            <div class="user-info" id="userInfo">
-                <img id="userAvatar" class="user-avatar" src="" alt="">
-                <div>
-                    <div id="userName" class="user-name"></div>
-                    <div style="font-size: 11px; color: #999;" id="userEmail"></div>
-                </div>
-                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
-            </div>
-            
-            <h1>Gestión de Pesca y Hielo</h1>
-            <p>Sistema Cloud con Firebase</p>
-            <div id="syncStatus" class="sync-status sync-loading">⏳ Conectando...</div>
+    <!-- ── HISTORIAL ── -->
+    <div class="tabCard" id="tab-his" style="display:none">
+      <div class="tableTopBar">
+        <span class="tableTitle">Historial de Registros <span id="histCount" style="font-size:12px;color:#6b7280;font-weight:400"></span></span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btnSmSec" onclick="renderHistorial()">↺ Actualizar</button>
+          <button class="btnExcel" onclick="exportarExcel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8.5 19l-2-3.5 2-3.5H10l-1.5 2.5L10 17H8.5zm4 0h-1.3l-1-1.8-1 1.8H8l1.7-3-1.7-3h1.3l1 1.8 1-1.8H12l-1.7 3L12 19zm3.5 0h-1.3l-2.2-6h1.4l1.5 4.5 1.5-4.5H16l-2.2 6H16z"/></svg>
+            Exportar Excel
+          </button>
         </div>
-
-        <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('nuevo-pedido')">📝 Nuevo Pedido</button>
-            <button class="tab-btn" onclick="showTab('pedidos')">📋 Mis Pedidos</button>
-            <button class="tab-btn" onclick="showTab('clientes')">👥 Clientes</button>
-            <button class="tab-btn" onclick="showTab('resumen')">📊 Resumen</button>
-        </div>
-
-        <div id="nuevo-pedido" class="content active">
-            <h2 style="margin-bottom: 20px; color: #667eea;">Registrar Nuevo Pedido</h2>
-            
-            <div class="form-group">
-                <label>Tipo de Pedido</label>
-                <select id="tipoPedido" onchange="updateFormFields()">
-                    <option value="logistica">Logística</option>
-                    <option value="hielo">Hielo</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Cliente</label>
-                <select id="cliente" onchange="updateClientPrice()">
-                    <option value="">Seleccionar cliente...</option>
-                </select>
-            </div>
-
-            <div id="logistica-fields">
-                <div class="form-group">
-                    <label>Cantidad de Bines</label>
-                    <input type="number" id="cantidadBines" min="1" required oninput="calcularLibrasDesdeBines()">
-                </div>
-
-                <div class="form-group">
-                    <label>Libras de Logística</label>
-                    <input type="number" id="cantidadLogistica" step="0.01" required oninput="calculateCommission()">
-                </div>
-
-                <div class="form-group">
-                    <label>Precio por Libra (Logística) ($)</label>
-                    <input type="number" id="precioLogistica" step="0.001" required oninput="calculateCommission()">
-                </div>
-            </div>
-
-            <div id="hielo-fields" style="display: none;">
-                <div class="form-group">
-                    <label>Cantidad de Sacos (50 lb c/u)</label>
-                    <input type="number" id="cantidadHielo" placeholder="Ej: 160" oninput="calculateCommission()">
-                </div>
-
-                <div class="form-group">
-                    <label>Precio por Saco ($)</label>
-                    <input type="number" id="precioHielo" step="0.001" placeholder="Ej: 0.600" oninput="calculateCommission()">
-                    <div id="clientPriceHielo" class="client-price"></div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Fecha</label>
-                <input type="date" id="fecha">
-            </div>
-
-            <div class="form-group">
-                <label>Notas (Opcional)</label>
-                <textarea id="notas" rows="3" placeholder="Información adicional..."></textarea>
-            </div>
-
-            <div class="alert alert-info">
-                <strong>Total del Pedido:</strong> $<span id="totalPedido">0.00</span><br>
-                <strong>Tu Comisión (1.5%):</strong> $<span id="comisionCalculada">0.00</span>
-            </div>
-
-            <button class="btn" onclick="saveOrder()">💾 Guardar Pedido</button>
-        </div>
-
-        <div id="pedidos" class="content">
-            <h2 style="margin-bottom: 20px; color: #667eea;">Mis Pedidos</h2>
-            
-            <button class="btn-export" onclick="exportToExcel()">
-                📊 Exportar a Excel
-            </button>
-            
-            <div class="filters-row">
-                <div class="filter-group">
-                    <label class="filter-label-with-count">
-                        <span>Estado</span>
-                        <span class="filter-count" id="estadoCount" style="display: none;">0</span>
-                    </label>
-                    <select id="filtroEstado" class="multi-select" multiple onchange="filterOrders()">
-                        <option value="pendiente">⏳ Pendientes</option>
-                        <option value="pagado">✅ Pagados</option>
-                        <option value="vencido">❌ Vencidos</option>
-                        <option value="sin_factura">📋 Sin Factura</option>
-                    </select>
-                    <div id="estadoTags" class="selected-items"></div>
-                </div>
-                
-                <div class="filter-group">
-                    <label class="filter-label-with-count">
-                        <span>Cliente</span>
-                        <span class="filter-count" id="clienteCount" style="display: none;">0</span>
-                    </label>
-                    <select id="filtroCliente" class="multi-select" multiple onchange="filterOrders()">
-                    </select>
-                    <div id="clienteTags" class="selected-items"></div>
-                </div>
-                
-                <div class="filter-group">
-                    <label class="filter-label-with-count">
-                        <span>Tipo</span>
-                        <span class="filter-count" id="tipoCount" style="display: none;">0</span>
-                    </label>
-                    <select id="filtroTipo" class="multi-select" multiple onchange="filterOrders()">
-                        <option value="logistica">Logística</option>
-                        <option value="hielo">Hielo</option>
-                    </select>
-                    <div id="tipoTags" class="selected-items"></div>
-                </div>
-                
-                <div class="filter-group">
-                    <label>Desde Fecha</label>
-                    <input type="date" id="filtroFechaDesde" onchange="filterOrders()">
-                </div>
-                
-                <div class="filter-group">
-                    <label>Hasta Fecha</label>
-                    <input type="date" id="filtroFechaHasta" onchange="filterOrders()">
-                </div>
-                
-                <div class="filter-group" style="align-self: end;">
-                    <button class="btn-clear-filter" onclick="clearFilters()">🔄 Limpiar Filtros</button>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha Pedido</th>
-                            <th>Cliente</th>
-                            <th>Tipo</th>
-                            <th>Bines</th>
-                            <th>Cantidad (lb)</th>
-                            <th>Precio Unit.</th>
-                            <th>Total</th>
-                            <th>Comisión</th>
-                            <th>Fecha Factura</th>
-                            <th>Fecha Pago</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordersBody">
-                    </tbody>
-                    <tfoot id="ordersFooter" style="display: none;">
-                        <tr style="background: #f8f9fa; border-top: 2px solid #667eea; font-weight: 700;">
-                            <td colspan="3" style="text-align: right; padding: 15px; color: #667eea;">TOTALES:</td>
-                            <td id="footerBines" style="padding: 15px; text-align: right;">-</td>
-                            <td id="footerCantidad" style="padding: 15px; text-align: right;">-</td>
-                            <td style="padding: 15px;">-</td>
-                            <td id="footerTotal" style="padding: 15px; color: #28a745; text-align: right;">0.00</td>
-                            <td id="footerComision" style="padding: 15px; color: #28a745; text-align: right;">0.00</td>
-                            <td colspan="4" style="padding: 15px;"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-
-        <div id="clientes" class="content">
-            <h2 style="margin-bottom: 20px; color: #667eea;">Gestión de Clientes</h2>
-            
-            <div class="form-group">
-                <label>Nombre del Cliente</label>
-                <input type="text" id="nombreCliente" placeholder="Ej: TPS">
-            </div>
-
-            <div class="two-column">
-                <div class="form-group">
-                    <label>Precio Logística ($/lb)</label>
-                    <input type="number" id="precioClienteCamaron" step="0.001" placeholder="Ej: 0.055">
-                </div>
-
-                <div class="form-group">
-                    <label>Precio Hielo ($/saco)</label>
-                    <input type="number" id="precioClienteHielo" step="0.001" placeholder="Ej: 0.600">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Libras por Bin</label>
-                <input type="number" id="librasPorBin" placeholder="1000" value="1000">
-                <small class="client-price">Común: 1000 lb/bin o 900 lb/bin</small>
-            </div>
-
-            <div class="form-group">
-                <label>Días de Crédito</label>
-                <input type="number" id="diasCredito" placeholder="Ej: 30" value="0">
-                <small class="client-price">Cantidad de días para el pago (0 = pago inmediato)</small>
-            </div>
-
-            <button class="btn" onclick="saveClient()">➕ Agregar Cliente</button>
-
-            <h3 style="margin-top: 30px; margin-bottom: 15px; color: #333;">Clientes Registrados</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Precio Logística</th>
-                            <th>Precio Hielo</th>
-                            <th>Lb/Bin</th>
-                            <th>Crédito</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clientsBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="resumen" class="content">
-            <h2 style="margin-bottom: 20px; color: #667eea;">Resumen Ejecutivo</h2>
-            
-            <!-- Filtro de fechas -->
-            <div class="date-filter-section">
-                <h3>📅 Filtros</h3>
-                <div class="date-inputs">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Estado</label>
-                        <select id="resumenFiltroEstado" onchange="updateSummary()">
-                            <option value="todos">Todos</option>
-                            <option value="pendiente">Pendientes</option>
-                            <option value="pagado">Pagados</option>
-                            <option value="vencido">Vencidos</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Desde</label>
-                        <input type="date" id="resumenFechaDesde">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Hasta</label>
-                        <input type="date" id="resumenFechaHasta">
-                    </div>
-                    <button class="btn-filter" onclick="updateSummary()">🔍 Aplicar Filtro</button>
-                    <button class="btn-clear-filter" onclick="clearSummaryFilter()">🔄 Limpiar</button>
-                </div>
-            </div>
-            
-            <div class="summary-grid">
-                <div class="summary-card">
-                    <h3>💰 Total Comisiones</h3>
-                    <div class="amount">$<span id="totalComisiones">0.00</span></div>
-                </div>
-                <div class="summary-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <h3>⏳ Pendientes de Cobro</h3>
-                    <div class="amount">$<span id="comisionesPendientes">0.00</span></div>
-                </div>
-                <div class="summary-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <h3>✅ Comisiones Cobradas</h3>
-                    <div class="amount">$<span id="comisionesPagadas">0.00</span></div>
-                </div>
-            </div>
-
-            <div class="summary-grid">
-                <div class="summary-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                    <h3>Total Libras Logística</h3>
-                    <div class="amount"><span id="totalLibras">0</span> lb</div>
-                </div>
-                <div class="summary-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                    <h3>Total Sacos Hielo</h3>
-                    <div class="amount"><span id="totalSacos">0</span> sacos</div>
-                </div>
-                <div class="summary-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
-                    <h3>📦 Total Pedidos</h3>
-                    <div class="amount"><span id="totalPedidos">0</span></div>
-                </div>
-            </div>
-            
-            <!-- Resumen por Cliente -->
-            <div class="summary-section-header">
-                <h3>📊 Resumen por Cliente</h3>
-                <span class="summary-info" id="clientSummaryInfo">0 clientes</span>
-            </div>
-            <div class="client-summary-table-container">
-                <table class="client-summary-table">
-                    <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th style="text-align: right;">Logística (lb)</th>
-                            <th style="text-align: right;">Hielo (sacos)</th>
-                            <th style="text-align: right;">📦 Pedidos</th>
-                            <th style="text-align: right;">💰 Comisiones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clientSummaryTableBody">
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 40px; color: #999;">
-                                No hay datos para mostrar
-                            </td>
-                        </tr>
-                    </tbody>
-                    <tfoot id="clientSummaryTableFooter" style="display: none;">
-                        <tr>
-                            <td class="total-label">TOTAL</td>
-                            <td class="total-value" id="totalLibrasFooter">0.00 lb</td>
-                            <td class="total-value" id="totalSacosFooter">0 sacos</td>
-                            <td class="total-value" id="totalPedidosFooter">0</td>
-                            <td class="total-value" id="totalComisionesFooter">$0.00</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <button class="btn" onclick="generateReport()">📄 Generar Reporte para Gerencia</button>
-
-                        <button class="btn" onclick="generateReport()">📄 Generar Reporte para Gerencia</button>
-
-            <div id="reportOutput" style="display: none; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
-                <h3 style="margin-bottom: 15px;">Reporte Generado</h3>
-                <pre id="reportText" style="white-space: pre-wrap; font-family: monospace; font-size: 14px;"></pre>
-                <button class="btn btn-secondary" onclick="copyReport()">📋 Copiar Reporte</button>
-            </div>
-        </div>
+      </div>
+      <input id="histSearch" placeholder="🔍 Buscar en todos los registros..." oninput="filtrarHistorial()">
+      <div class="tableWrap">
+        <table id="histTable">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Fecha</th><th>Hora</th><th>Movimiento</th><th>Guardia</th><th>Turno</th>
+              <th>Guía</th><th>Compañía</th><th>Nombre/Apellido</th><th>Placa</th><th>Disco</th>
+              <th>Kilometraje</th><th>Combustible</th><th>Retorno/Destino</th>
+              <th>Llanta Emerg.</th><th>Extintor</th><th>Kit</th>
+              <th>Bines</th><th>Sacos</th><th>Gavetas</th><th>Observaciones</th>
+            </tr>
+            <tr class="filterRow" id="filterRow">
+              <th></th>
+              <th><input type="date" id="flt_fecha" oninput="filtrarHistorial()"></th>
+              <th><input type="time" id="flt_hora" oninput="filtrarHistorial()"></th>
+              <th><select id="flt_tipo" onchange="filtrarHistorial()"><option value="">Todos</option><option>ENTRADA</option><option>SALIDA</option></select></th>
+              <th><input placeholder="Guardia" id="flt_guardia" oninput="filtrarHistorial()"></th>
+              <th><select id="flt_turno" onchange="filtrarHistorial()"><option value="">Todos</option><option>DÍA</option><option>NOCHE</option></select></th>
+              <th><input placeholder="Guía" id="flt_guia" oninput="filtrarHistorial()"></th>
+              <th><input placeholder="Compañía" id="flt_compania" oninput="filtrarHistorial()"></th>
+              <th><input placeholder="Nombre" id="flt_nombre" oninput="filtrarHistorial()"></th>
+              <th><input placeholder="Placa" id="flt_placa" oninput="filtrarHistorial()"></th>
+              <th><input placeholder="Disco" id="flt_disco" oninput="filtrarHistorial()"></th>
+              <th><input placeholder="Km" id="flt_km" oninput="filtrarHistorial()"></th>
+              <th><select id="flt_comb" onchange="filtrarHistorial()"><option value="">Todos</option><option>1/4</option><option>1/2</option><option>3/4</option><option>Lleno</option><option>Vacío</option></select></th>
+              <th><input placeholder="Destino" id="flt_destino" oninput="filtrarHistorial()"></th>
+              <th><select id="flt_llanta" onchange="filtrarHistorial()"><option value="">Todos</option><option>Sí</option><option>No</option></select></th>
+              <th><select id="flt_extintor" onchange="filtrarHistorial()"><option value="">Todos</option><option>Sí</option><option>No</option></select></th>
+              <th><select id="flt_kit" onchange="filtrarHistorial()"><option value="">Todos</option><option>Sí</option><option>No</option></select></th>
+              <th><input placeholder="Bines" id="flt_bines" oninput="filtrarHistorial()"></th>
+              <th><input placeholder="Sacos" id="flt_sacos" oninput="filtrarHistorial()"></th>
+              <th><input placeholder="Gavetas" id="flt_gavetas" oninput="filtrarHistorial()"></th>
+              <th><input placeholder="Obs." id="flt_obs" oninput="filtrarHistorial()"></th>
+            </tr>
+          </thead>
+          <tbody id="histBody"><tr class="emptyRow"><td colspan="21">No hay registros aún</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- SheetJS para exportar Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-    <!-- Modal para editar pedido -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>✏️ Editar Pedido</h3>
-                <button class="close-modal" onclick="closeEditModal()">✕ Cerrar</button>
-            </div>
-            <input type="hidden" id="editOrderId">
-            
-            <div class="form-group">
-                <label>Fecha del Pedido</label>
-                <input type="date" id="editFecha">
-            </div>
-            
-            <div class="form-group">
-                <label>Cliente</label>
-                <input type="text" id="editCliente" readonly style="background: #f0f0f0;">
-            </div>
-            
-            <div class="form-group">
-                <label>Tipo</label>
-                <select id="editTipo" onchange="toggleEditFields()">
-                    <option value="logistica">Logística</option>
-                    <option value="hielo">Hielo</option>
-                </select>
-            </div>
-            
-            <div id="editLogisticaFields">
-                <div class="form-group">
-                    <label>Cantidad de Bines</label>
-                    <input type="number" id="editCantidadBines" min="1" oninput="recalculateEdit()">
-                </div>
-                <div class="form-group">
-                    <label>Libras de Logística</label>
-                    <input type="number" id="editCantidadLogistica" step="0.01" oninput="recalculateEdit()">
-                </div>
-                <div class="form-group">
-                    <label>Precio por Libra ($)</label>
-                    <input type="number" id="editPrecioLogistica" step="0.001" oninput="recalculateEdit()">
-                </div>
-            </div>
-            
-            <div id="editHieloFields" style="display: none;">
-                <div class="form-group">
-                    <label>Cantidad de Sacos</label>
-                    <input type="number" id="editCantidadHielo" oninput="recalculateEdit()">
-                </div>
-                <div class="form-group">
-                    <label>Precio por Saco ($)</label>
-                    <input type="number" id="editPrecioHielo" step="0.001" oninput="recalculateEdit()">
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label>Notas</label>
-                <textarea id="editNotas" rows="3"></textarea>
-            </div>
-            
-            <div class="alert alert-info">
-                <strong>Total:</strong> $<span id="editTotalCalc">0.00</span><br>
-                <strong>Comisión (1.5%):</strong> $<span id="editComisionCalc">0.00</span>
-            </div>
-            
-            <button type="button" class="btn" onclick="saveEditedOrder()">💾 Guardar Cambios</button>
-        </div>
+    <!-- ── USUARIOS ── -->
+    <div class="tabCard" id="tab-usr" style="display:none">
+      <div class="tableTopBar">
+        <span class="tableTitle">Gestión de Usuarios</span>
+        <button class="btnSuccess" onclick="abrirModalUsr()">+ Nuevo Usuario</button>
+      </div>
+      <div class="tableWrap">
+        <table style="min-width:400px">
+          <thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="usrBody"></tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-    <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAzIpGypgd4B1NlwHzPlYRJ7zzfees0SyU",
-            authDomain: "app-libras-hielo.firebaseapp.com",
-            projectId: "app-libras-hielo",
-            storageBucket: "app-libras-hielo.firebasestorage.app",
-            messagingSenderId: "790095487059",
-            appId: "1:790095487059:web:b87f22a9f853d72f0ba6a6"
-        };
-
-        // Initialize Firebase
-        let auth, db, currentUser;
-        let clients = [];
-        let orders = [];
-
-        firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        db = firebase.firestore();
-
-        // Helper: reference to user's document
-        function uRef() {
-            return db.collection('users').doc(currentUser.uid);
-        }
-
-        // Check authentication state
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user;
-                console.log('✅ Usuario autenticado:', user.email, '| UID:', user.uid);
-
-                document.getElementById('userName').textContent = user.displayName || 'Usuario';
-                document.getElementById('userEmail').textContent = user.email;
-                document.getElementById('userAvatar').src = user.photoURL || '';
-
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('loadingScreen').style.display = 'flex';
-
-                try {
-                    await loadDataFromFirebase();
-
-                    document.getElementById('loadingScreen').style.display = 'none';
-                    document.getElementById('mainContainer').style.display = 'block';
-
-                    document.getElementById('syncStatus').className = 'sync-status sync-online';
-                    document.getElementById('syncStatus').textContent = '🟢 Conectado';
-
-                    window.clients = clients;
-                    window.orders = orders;
-
-                    updateClientSelect();
-                    displayOrders();
-                    displayClients();
-                    updateSummary();
-                    initForm();
-                } catch (error) {
-                    console.error('❌ Error al cargar datos:', error);
-                    document.getElementById('loadingScreen').style.display = 'none';
-                    document.getElementById('mainContainer').style.display = 'block';
-                    document.getElementById('syncStatus').className = 'sync-status sync-offline';
-                    document.getElementById('syncStatus').textContent = '⚠️ Error de conexión';
-                    alert('Error al cargar datos: ' + error.message);
-                }
-            } else {
-                document.getElementById('loginScreen').style.display = 'flex';
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('mainContainer').style.display = 'none';
-            }
-        });
-
-        // Google Sign In
-        document.getElementById('googleSignInBtn').addEventListener('click', async () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                await auth.signInWithPopup(provider);
-            } catch (error) {
-                console.error('Error signing in:', error);
-                alert('Error al iniciar sesión: ' + error.message);
-            }
-        });
-
-        // Logout
-        async function logout() {
-            if (confirm('¿Cerrar sesión?')) {
-                await auth.signOut();
-            }
-        }
-
-        // Anonymous mode
-        function useAnonymousMode() {
-            if (confirm('En modo anónimo los datos solo se guardan en este navegador.\n\n¿Continuar?')) {
-                window.location.href = 'gestion-pesca-final.html';
-            }
-        }
-
-        // =============================================
-        // LOAD from Firebase
-        // =============================================
-        async function loadDataFromFirebase() {
-            console.log('📥 Cargando desde Firebase... UID:', currentUser.uid);
-
-            // Ensure user document exists with merge
-            await uRef().set({
-                email: currentUser.email,
-                displayName: currentUser.displayName,
-                lastLogin: new Date().toISOString()
-            }, { merge: true });
-
-            // Load clients
-            const cSnap = await uRef().collection('clients').get();
-            clients = [];
-            cSnap.forEach(doc => clients.push({ firebaseId: doc.id, ...doc.data() }));
-            window.clients = clients;
-            console.log('✅ Clientes:', clients.length);
-
-            // Load orders
-            const oSnap = await uRef().collection('orders').get();
-            orders = [];
-            oSnap.forEach(doc => orders.push({ firebaseId: doc.id, ...doc.data() }));
-            window.orders = orders;
-            console.log('✅ Pedidos:', orders.length);
-        }
-
-        // =============================================
-        // SAVE one client to Firebase
-        // =============================================
-        async function saveClientToFirebase(client) {
-            document.getElementById('syncStatus').textContent = '⏳ Guardando...';
-            try {
-                let docRef;
-                if (client.firebaseId) {
-                    docRef = uRef().collection('clients').doc(client.firebaseId);
-                } else {
-                    docRef = uRef().collection('clients').doc();
-                    client.firebaseId = docRef.id;
-                }
-                await docRef.set(client);
-                console.log('✅ Cliente guardado:', client.nombre, '| ID:', client.firebaseId);
-                document.getElementById('syncStatus').className = 'sync-status sync-online';
-                document.getElementById('syncStatus').textContent = '🟢 Sincronizado';
-            } catch (error) {
-                console.error('❌ Error guardando cliente:', error);
-                document.getElementById('syncStatus').className = 'sync-status sync-offline';
-                document.getElementById('syncStatus').textContent = '⚠️ Error';
-                throw error;
-            }
-        }
-
-        // =============================================
-        // SAVE one order to Firebase
-        // =============================================
-        async function saveOrderToFirebase(order) {
-            document.getElementById('syncStatus').textContent = '⏳ Guardando...';
-            try {
-                let docRef;
-                if (order.firebaseId) {
-                    docRef = uRef().collection('orders').doc(order.firebaseId);
-                } else {
-                    docRef = uRef().collection('orders').doc();
-                    order.firebaseId = docRef.id;
-                }
-                await docRef.set(order);
-                console.log('✅ Pedido guardado | ID:', order.firebaseId);
-                document.getElementById('syncStatus').className = 'sync-status sync-online';
-                document.getElementById('syncStatus').textContent = '🟢 Sincronizado';
-            } catch (error) {
-                console.error('❌ Error guardando pedido:', error);
-                document.getElementById('syncStatus').className = 'sync-status sync-offline';
-                document.getElementById('syncStatus').textContent = '⚠️ Error';
-                throw error;
-            }
-        }
-
-        // =============================================
-        // DELETE from Firebase
-        // =============================================
-        async function deleteFromFirebase(colName, firebaseId) {
-            if (!currentUser || !firebaseId) return;
-            try {
-                await uRef().collection(colName).doc(firebaseId).delete();
-                console.log('🗑️ Eliminado:', colName, firebaseId);
-            } catch (error) {
-                console.error('❌ Error eliminando:', error);
-            }
-        }
-
-        // Legacy wrapper (keeps compatibility with rest of code)
-        async function saveDataToFirebase() {
-            for (const client of clients) {
-                await saveClientToFirebase(client);
-            }
-            for (const order of orders) {
-                await saveOrderToFirebase(order);
-            }
-        }
-
-        window.clients = clients;
-        window.orders = orders;
-        window.saveDataToFirebase = saveDataToFirebase;
-        window.saveClientToFirebase = saveClientToFirebase;
-        window.saveOrderToFirebase = saveOrderToFirebase;
-        window.deleteFromFirebase = deleteFromFirebase;
-    </script>
-
-    <script>
-        // =============================================
-        // FUNCIONES NUEVAS - EDICIÓN Y FILTROS
-        // =============================================
-
-        // Abrir modal de edición
-        function openEditModal(orderId) {
-            const order = window.orders.find(o => o.id === orderId);
-            if (!order) return;
-
-            document.getElementById('editOrderId').value = order.id;
-            document.getElementById('editFecha').value = order.fecha;
-            document.getElementById('editCliente').value = order.cliente;
-            document.getElementById('editTipo').value = order.tipo;
-            document.getElementById('editNotas').value = order.notas || '';
-
-            if (order.tipo === 'logistica') {
-                document.getElementById('editCantidadBines').value = order.bines || 0;
-                document.getElementById('editCantidadLogistica').value = order.cantidad;
-                document.getElementById('editPrecioLogistica').value = order.precio;
-                document.getElementById('editLogisticaFields').style.display = 'block';
-                document.getElementById('editHieloFields').style.display = 'none';
-            } else {
-                document.getElementById('editCantidadHielo').value = order.cantidad;
-                document.getElementById('editPrecioHielo').value = order.precio;
-                document.getElementById('editLogisticaFields').style.display = 'none';
-                document.getElementById('editHieloFields').style.display = 'block';
-            }
-
-            recalculateEdit();
-            document.getElementById('editModal').classList.add('show');
-        }
-
-        // Cerrar modal
-        function closeEditModal() {
-            document.getElementById('editModal').classList.remove('show');
-        }
-
-        // Cambiar campos según tipo
-        function toggleEditFields() {
-            const tipo = document.getElementById('editTipo').value;
-            if (tipo === 'logistica') {
-                document.getElementById('editLogisticaFields').style.display = 'block';
-                document.getElementById('editHieloFields').style.display = 'none';
-            } else {
-                document.getElementById('editLogisticaFields').style.display = 'none';
-                document.getElementById('editHieloFields').style.display = 'block';
-            }
-            recalculateEdit();
-        }
-
-        // Recalcular totales en modal de edición
-        function recalculateEdit() {
-            const tipo = document.getElementById('editTipo').value;
-            let total = 0;
-
-            if (tipo === 'logistica') {
-                const cantidad = parseFloat(document.getElementById('editCantidadLogistica').value) || 0;
-                const precio = parseFloat(document.getElementById('editPrecioLogistica').value) || 0;
-                total = cantidad * precio;
-            } else {
-                const cantidad = parseFloat(document.getElementById('editCantidadHielo').value) || 0;
-                const precio = parseFloat(document.getElementById('editPrecioHielo').value) || 0;
-                total = cantidad * precio;
-            }
-
-            const comision = total * 0.015;
-            document.getElementById('editTotalCalc').textContent = total.toFixed(2);
-            document.getElementById('editComisionCalc').textContent = comision.toFixed(2);
-        }
-
-        // Guardar pedido editado
-        async function saveEditedOrder() {
-            const orderId = parseInt(document.getElementById('editOrderId').value);
-            const order = window.orders.find(o => o.id === orderId);
-            if (!order) return;
-
-            const tipo = document.getElementById('editTipo').value;
-            const fecha = document.getElementById('editFecha').value;
-            const notas = document.getElementById('editNotas').value;
-
-            let cantidad, precio, bines = 0;
-            if (tipo === 'logistica') {
-                bines = parseInt(document.getElementById('editCantidadBines').value) || 0;
-                cantidad = parseFloat(document.getElementById('editCantidadLogistica').value) || 0;
-                precio = parseFloat(document.getElementById('editPrecioLogistica').value) || 0;
-            } else {
-                cantidad = parseFloat(document.getElementById('editCantidadHielo').value) || 0;
-                precio = parseFloat(document.getElementById('editPrecioHielo').value) || 0;
-            }
-
-            if (cantidad <= 0 || precio <= 0) {
-                alert('Ingresa cantidad y precio válidos');
-                return;
-            }
-
-            // Actualizar orden
-            order.tipo = tipo;
-            order.fecha = fecha;
-            order.bines = bines;
-            order.cantidad = cantidad;
-            order.precio = precio;
-            order.total = cantidad * precio;
-            order.comision = order.total * 0.015;
-            order.notas = notas;
-
-            await window.saveOrderToFirebase(order);
-            displayOrders();
-            updateSummary();
-            closeEditModal();
-            alert('✅ Pedido actualizado');
-        }
-
-        // =============================================
-        // FUNCIONES MULTI-SELECT FILTERS
-        // =============================================
-
-        // Obtener valores seleccionados de un multi-select
-        function getMultiSelectValues(selectId) {
-            const select = document.getElementById(selectId);
-            if (!select) return [];
-            const options = select.selectedOptions;
-            return Array.from(options).map(opt => opt.value);
-        }
-
-        // Actualizar tags visuales de selección
-        function updateFilterTags() {
-            // Estado
-            const estadoValues = getMultiSelectValues('filtroEstado');
-            updateTagsDisplay('estadoTags', 'estadoCount', estadoValues, {
-                'pendiente': '⏳ Pendiente',
-                'pagado': '✅ Pagado',
-                'vencido': '❌ Vencido',
-                'sin_factura': '📋 Sin Factura'
-            });
-
-            // Cliente
-            const clienteValues = getMultiSelectValues('filtroCliente');
-            const clienteLabels = {};
-            clienteValues.forEach(val => {
-                clienteLabels[val] = val;
-            });
-            updateTagsDisplay('clienteTags', 'clienteCount', clienteValues, clienteLabels);
-
-            // Tipo
-            const tipoValues = getMultiSelectValues('filtroTipo');
-            updateTagsDisplay('tipoTags', 'tipoCount', tipoValues, {
-                'logistica': 'Logística',
-                'hielo': 'Hielo'
-            });
-        }
-
-        // Actualizar display de tags
-        function updateTagsDisplay(containerId, countId, values, labels) {
-            const container = document.getElementById(containerId);
-            const countBadge = document.getElementById(countId);
-            
-            if (!container) return;
-
-            container.innerHTML = '';
-
-            if (values.length > 0) {
-                countBadge.style.display = 'inline-block';
-                countBadge.textContent = values.length;
-
-                values.forEach(value => {
-                    const tag = document.createElement('div');
-                    tag.className = 'selected-tag';
-                    tag.innerHTML = `
-                        <span>${labels[value] || value}</span>
-                        <span class="remove-tag" onclick="removeFilterTag('${containerId.replace('Tags', '')}', '${value}')">✕</span>
-                    `;
-                    container.appendChild(tag);
-                });
-            } else {
-                countBadge.style.display = 'none';
-            }
-        }
-
-        // Remover un tag específico
-        function removeFilterTag(filterType, value) {
-            const selectId = 'filtro' + filterType.charAt(0).toUpperCase() + filterType.slice(1);
-            const select = document.getElementById(selectId);
-            
-            if (select) {
-                const options = select.options;
-                for (let i = 0; i < options.length; i++) {
-                    if (options[i].value === value) {
-                        options[i].selected = false;
-                        break;
-                    }
-                }
-                filterOrders();
-            }
-        }
-
-        // Actualizar getFilteredOrders para multi-select
-        function getFilteredOrdersMulti() {
-            let filtered = [...window.orders];
-
-            const filtroEstado = getMultiSelectValues('filtroEstado');
-            const filtroCliente = getMultiSelectValues('filtroCliente');
-            const filtroTipo = getMultiSelectValues('filtroTipo');
-            const filtroFechaDesde = document.getElementById('filtroFechaDesde')?.value;
-            const filtroFechaHasta = document.getElementById('filtroFechaHasta')?.value;
-
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            // Filtro por estado (múltiple)
-            if (filtroEstado.length > 0) {
-                filtered = filtered.filter(o => {
-                    // Determinar el estado real del pedido
-                    let realStatus = o.estado;
-                    
-                    if (realStatus === 'pendiente') {
-                        // Verificar si está vencido
-                        if (o.fechaPago) {
-                            const fechaPago = new Date(o.fechaPago);
-                            if (fechaPago < today) {
-                                realStatus = 'vencido';
-                            }
-                        } else {
-                            realStatus = 'sin_factura';
-                        }
-                    }
-
-                    return filtroEstado.includes(realStatus);
-                });
-            }
-
-            // Filtro por cliente (múltiple)
-            if (filtroCliente.length > 0) {
-                filtered = filtered.filter(o => filtroCliente.includes(o.cliente));
-            }
-
-            // Filtro por tipo (múltiple)
-            if (filtroTipo.length > 0) {
-                filtered = filtered.filter(o => filtroTipo.includes(o.tipo));
-            }
-
-            // Filtro por rango de fechas
-            if (filtroFechaDesde) {
-                filtered = filtered.filter(o => o.fecha >= filtroFechaDesde);
-            }
-            if (filtroFechaHasta) {
-                filtered = filtered.filter(o => o.fecha <= filtroFechaHasta);
-            }
-
-            return filtered;
-        }
-
-        // Actualizar clearFilters para multi-select
-        function clearFiltersMulti() {
-            // Deseleccionar todos los options
-            ['filtroEstado', 'filtroCliente', 'filtroTipo'].forEach(id => {
-                const select = document.getElementById(id);
-                if (select) {
-                    for (let i = 0; i < select.options.length; i++) {
-                        select.options[i].selected = false;
-                    }
-                }
-            });
-
-            document.getElementById('filtroFechaDesde').value = '';
-            document.getElementById('filtroFechaHasta').value = '';
-            
-            updateFilterTags();
-            filterOrders();
-        }
-
-        // Actualizar updateClientFilter para multi-select
-        function updateClientFilterMulti() {
-            const select = document.getElementById('filtroCliente');
-            if (!select) return;
-
-            const currentValues = getMultiSelectValues('filtroCliente');
-            select.innerHTML = '';
-
-            const uniqueClients = [...new Set(window.orders.map(o => o.cliente))].sort();
-            uniqueClients.forEach(cliente => {
-                const option = document.createElement('option');
-                option.value = cliente;
-                option.textContent = cliente;
-                if (currentValues.includes(cliente)) {
-                    option.selected = true;
-                }
-                select.appendChild(option);
-            });
-        }
-
-
-                // Exportar a Excel
-        function exportToExcel() {
-            const filteredOrders = getFilteredOrders();
-            
-            if (filteredOrders.length === 0) {
-                alert('No hay pedidos para exportar');
-                return;
-            }
-
-            // Preparar datos para Excel
-            const data = filteredOrders.map(order => {
-                const bines = order.bines || 0;
-                
-                return {
-                    'Fecha': order.fecha,
-                    'Cliente': order.cliente,
-                    'Tipo': order.tipo === 'logistica' ? 'Logística' : 'Hielo',
-                    'Bines': order.tipo === 'logistica' ? bines : '-',
-                    'Cantidad': Math.round(order.cantidad),
-                    'Precio Unit.': order.precio.toFixed(3),
-                    'Total': order.total.toFixed(2),
-                    'Comisión': order.comision.toFixed(2),
-                    'Estado': order.estado === 'pagado' ? 'Pagado' : 'Pendiente',
-                    'Fecha Factura': order.fechaFactura || '-',
-                    'Fecha Pago': order.fechaPago || '-',
-                    'Notas': order.notas || ''
-                };
-            });
-
-            // Crear worksheet
-            const ws = XLSX.utils.json_to_sheet(data);
-            
-            // Ajustar anchos de columna
-            const colWidths = [
-                { wch: 12 }, // Fecha
-                { wch: 20 }, // Cliente
-                { wch: 12 }, // Tipo
-                { wch: 8 },  // Bines
-                { wch: 12 }, // Cantidad
-                { wch: 12 }, // Precio Unit.
-                { wch: 12 }, // Total
-                { wch: 12 }, // Comisión
-                { wch: 10 }, // Estado
-                { wch: 12 }, // Fecha Factura
-                { wch: 12 }, // Fecha Pago
-                { wch: 30 }  // Notas
-            ];
-            ws['!cols'] = colWidths;
-
-            // Crear workbook
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
-
-            // Generar nombre de archivo con fecha/hora
-            const now = new Date();
-            const dd = String(now.getDate()).padStart(2, '0');
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const yy = String(now.getFullYear()).slice(-2);
-            const hh = String(now.getHours()).padStart(2, '0');
-            const min = String(now.getMinutes()).padStart(2, '0');
-            const filename = `Detalle de Pedidos ${dd}-${mm}-${yy} ${hh}-${min}.xlsx`;
-
-            // Descargar archivo
-            XLSX.writeFile(wb, filename);
-            alert('✅ Excel exportado: ' + filename);
-        }
-
-        // Obtener pedidos filtrados
-        function getFilteredOrders() { return getFilteredOrdersMulti(); }
-
-        function getFilteredOrdersOld() {
-            let filtered = [...window.orders];
-
-            const filtroEstado = document.getElementById('filtroEstado')?.value;
-            const filtroCliente = document.getElementById('filtroCliente')?.value;
-            const filtroTipo = document.getElementById('filtroTipo')?.value;
-            const filtroFechaDesde = document.getElementById('filtroFechaDesde')?.value;
-            const filtroFechaHasta = document.getElementById('filtroFechaHasta')?.value;
-
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            // Filtro por estado
-            if (filtroEstado && filtroEstado !== 'todos') {
-                if (filtroEstado === 'vencido') {
-                    filtered = filtered.filter(o => {
-                        if (o.estado === 'pagado' || !o.fechaPago) return false;
-                        const fechaPago = new Date(o.fechaPago);
-                        return fechaPago < today;
-                    });
-                } else {
-                    filtered = filtered.filter(o => o.estado === filtroEstado);
-                }
-            }
-
-            // Filtro por cliente
-            if (filtroCliente && filtroCliente !== 'todos') {
-                filtered = filtered.filter(o => o.cliente === filtroCliente);
-            }
-
-            // Filtro por tipo
-            if (filtroTipo && filtroTipo !== 'todos') {
-                filtered = filtered.filter(o => o.tipo === filtroTipo);
-            }
-
-            // Filtro por rango de fechas
-            if (filtroFechaDesde) {
-                filtered = filtered.filter(o => o.fecha >= filtroFechaDesde);
-            }
-            if (filtroFechaHasta) {
-                filtered = filtered.filter(o => o.fecha <= filtroFechaHasta);
-            }
-
-            return filtered;
-        }
-
-        // Limpiar filtros
-        function clearFilters() { return clearFiltersMulti(); }
-
-        function clearFiltersOld() {
-            document.getElementById('filtroEstado').value = 'todos';
-            document.getElementById('filtroCliente').value = 'todos';
-            document.getElementById('filtroTipo').value = 'todos';
-            document.getElementById('filtroFechaDesde').value = '';
-            document.getElementById('filtroFechaHasta').value = '';
-            filterOrders();
-        }
-
-        // Actualizar select de clientes en filtro
-        function updateClientFilter() { return updateClientFilterMulti(); }
-
-        function updateClientFilterOld() {
-            const select = document.getElementById('filtroCliente');
-            if (!select) return;
-
-            const currentValue = select.value;
-            select.innerHTML = '<option value="todos">Todos</option>';
-
-            const uniqueClients = [...new Set(window.orders.map(o => o.cliente))].sort();
-            uniqueClients.forEach(cliente => {
-                const option = document.createElement('option');
-                option.value = cliente;
-                option.textContent = cliente;
-                select.appendChild(option);
-            });
-
-            if (currentValue) select.value = currentValue;
-        }
-
-        // Limpiar filtro de resumen
-        function clearSummaryFilter() {
-            document.getElementById('resumenFiltroEstado').value = 'todos';
-            document.getElementById('resumenFechaDesde').value = '';
-            document.getElementById('resumenFechaHasta').value = '';
-            updateSummary();
-        }
-
-        // Generar resumen por cliente (TABLA)
-        function generateClientSummary() {
-            const tbody = document.getElementById('clientSummaryTableBody');
-            const tfoot = document.getElementById('clientSummaryTableFooter');
-            const infoSpan = document.getElementById('clientSummaryInfo');
-            
-            if (!tbody) return;
-
-            const filtroEstado = document.getElementById('resumenFiltroEstado')?.value;
-            const fechaDesde = document.getElementById('resumenFechaDesde')?.value;
-            const fechaHasta = document.getElementById('resumenFechaHasta')?.value;
-
-            let filteredOrders = [...window.orders];
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            // Aplicar filtro de estado
-            if (filtroEstado && filtroEstado !== 'todos') {
-                if (filtroEstado === 'vencido') {
-                    filteredOrders = filteredOrders.filter(o => {
-                        if (o.estado === 'pagado' || !o.fechaPago) return false;
-                        const fechaPago = new Date(o.fechaPago);
-                        return fechaPago < today;
-                    });
-                } else {
-                    filteredOrders = filteredOrders.filter(o => o.estado === filtroEstado);
-                }
-            }
-
-            // Aplicar filtro de fechas
-            if (fechaDesde) {
-                filteredOrders = filteredOrders.filter(o => o.fecha >= fechaDesde);
-            }
-            if (fechaHasta) {
-                filteredOrders = filteredOrders.filter(o => o.fecha <= fechaHasta);
-            }
-
-            // Agrupar por cliente
-            const clientStats = {};
-
-            filteredOrders.forEach(order => {
-                if (!clientStats[order.cliente]) {
-                    clientStats[order.cliente] = {
-                        librasCamaron: 0,
-                        sacosHielo: 0,
-                        totalComisiones: 0,
-                        pedidos: 0
-                    };
-                }
-
-                clientStats[order.cliente].pedidos++;
-                clientStats[order.cliente].totalComisiones += order.comision;
-
-                if (order.tipo === 'logistica') {
-                    clientStats[order.cliente].librasCamaron += order.cantidad;
-                } else {
-                    clientStats[order.cliente].sacosHielo += order.cantidad;
-                }
-            });
-
-            // Limpiar tabla
-            tbody.innerHTML = '';
-
-            const clientesOrdenados = Object.keys(clientStats).sort();
-
-            if (clientesOrdenados.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px; color: #999;">
-                            No hay datos para mostrar
-                        </td>
-                    </tr>
-                `;
-                tfoot.style.display = 'none';
-                if (infoSpan) infoSpan.textContent = '0 clientes';
-                return;
-            }
-
-            // Totales
-            let totalLibrasGlobal = 0;
-            let totalSacosGlobal = 0;
-            let totalPedidosGlobal = 0;
-            let totalComisionesGlobal = 0;
-
-            // Generar filas
-            clientesOrdenados.forEach(cliente => {
-                const stats = clientStats[cliente];
-                
-                totalLibrasGlobal += stats.librasCamaron;
-                totalSacosGlobal += stats.sacosHielo;
-                totalPedidosGlobal += stats.pedidos;
-                totalComisionesGlobal += stats.totalComisiones;
-
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td class="client-name">${cliente}</td>
-                    <td class="number-cell">${stats.librasCamaron.toFixed(2)}</td>
-                    <td class="number-cell">${stats.sacosHielo}</td>
-                    <td class="number-cell">${stats.pedidos}</td>
-                    <td class="number-cell total-cell">$${stats.totalComisiones.toFixed(2)}</td>
-                `;
-            });
-
-            // Actualizar footer con totales
-            document.getElementById('totalLibrasFooter').textContent = totalLibrasGlobal.toFixed(2) + ' lb';
-            document.getElementById('totalSacosFooter').textContent = totalSacosGlobal + ' sacos';
-            document.getElementById('totalPedidosFooter').textContent = totalPedidosGlobal;
-            document.getElementById('totalComisionesFooter').textContent = '$' + totalComisionesGlobal.toFixed(2);
-            
-            tfoot.style.display = 'table-footer-group';
-            
-            // Actualizar info
-            if (infoSpan) {
-                infoSpan.textContent = `${clientesOrdenados.length} cliente${clientesOrdenados.length !== 1 ? 's' : ''}`;
-            }
-        }
-
-
-        function showTab(tabId) {
-            document.querySelectorAll('.content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
-            
-            if (tabId === 'resumen') {
-                updateSummary();
-            }
-        }
-
-        function initForm() {
-            document.getElementById('fecha').valueAsDate = new Date();
-        }
-
-        function calculateFromBins() {
-            const bins = parseFloat(document.getElementById('cantidadBines').value) || 0;
-            const clientIndex = document.getElementById('cliente').value;
-            
-            if (bins > 0 && clientIndex !== '') {
-                const client = window.clients[clientIndex];
-                const librasPorBin = client.librasPorBin || 1000;
-                const totalLibras = bins * librasPorBin;
-                
-                document.getElementById('cantidadLogistica').value = totalLibras;
-                document.getElementById('binsInfo').textContent = 
-                    `${bins} bins × ${librasPorBin} lb/bin = ${totalLibras.toLocaleString()} libras`;
-                
-                calculateCommission();
-            }
-        }
-
-        function updateFormFields() {
-            const tipo = document.getElementById('tipoPedido').value;
-            const logisticaFields = document.getElementById('logistica-fields');
-            const hieloFields = document.getElementById('hielo-fields');
-            
-            if (tipo === 'logistica') {
-                logisticaFields.style.display = 'block';
-                hieloFields.style.display = 'none';
-            } else {
-                logisticaFields.style.display = 'none';
-                hieloFields.style.display = 'block';
-            }
-            
-            updateClientPrice();
-            calculateCommission();
-        }
-
-        function updateClientSelect() {
-            const select = document.getElementById('cliente');
-            select.innerHTML = '<option value="">Seleccionar cliente...</option>';
-            
-            window.clients.forEach((client, index) => {
-                if (client.activo !== false) {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = client.nombre;
-                    select.appendChild(option);
-                }
-            });
-        }
-
-        function updateClientPrice() {
-            const clientIndex = document.getElementById('cliente').value;
-            const tipo = document.getElementById('tipoPedido').value;
-            
-            if (clientIndex !== '') {
-                const client = window.clients[clientIndex];
-                
-                if (tipo === 'logistica') {
-                    document.getElementById('precioLogistica').value = client.precioCamaron.toFixed(3);
-                    document.getElementById('clientPriceCamaron').textContent = 
-                        `Precio: $${client.precioCamaron.toFixed(3)}/lb | ${client.librasPorBin || 1000} lb/bin`;
-                } else {
-                    document.getElementById('precioHielo').value = client.precioHielo.toFixed(3);
-                    document.getElementById('clientPriceHielo').textContent = 
-                        `Precio: $${client.precioHielo.toFixed(3)}/saco`;
-                }
-                
-                calculateCommission();
-            }
-        }
-
-        // Calcular libras automáticamente basado en bines y libras por bin del cliente
-        function calcularLibrasDesdeBines() {
-            const clientIndex = document.getElementById('cliente').value;
-            if (clientIndex === '') {
-                return; // No hay cliente seleccionado
-            }
-            
-            const client = window.clients[clientIndex];
-            const bines = parseInt(document.getElementById('cantidadBines').value) || 0;
-            const librasPorBin = client.librasPorBin || 2500; // Default 2500 si no tiene
-            
-            if (bines > 0) {
-                const librasCalculadas = bines * librasPorBin;
-                document.getElementById('cantidadLogistica').value = librasCalculadas;
-            }
-            
-            // Actualizar comisión automáticamente
-            calculateCommission();
-        }
-
-        function calculateCommission() {
-            const tipo = document.getElementById('tipoPedido').value;
-            let total = 0;
-            
-            if (tipo === 'logistica') {
-                const libras = parseFloat(document.getElementById('cantidadLogistica').value) || 0;
-                const precio = parseFloat(document.getElementById('precioLogistica').value) || 0;
-                total = libras * precio;
-            } else {
-                const sacos = parseFloat(document.getElementById('cantidadHielo').value) || 0;
-                const precio = parseFloat(document.getElementById('precioHielo').value) || 0;
-                total = sacos * precio;
-            }
-            
-            const comision = total * 0.015;
-            
-            document.getElementById('totalPedido').textContent = total.toFixed(2);
-            document.getElementById('comisionCalculada').textContent = comision.toFixed(2);
-        }
-
-        async function saveOrder() {
-            const clientIndex = document.getElementById('cliente').value;
-            const tipo = document.getElementById('tipoPedido').value;
-            const fecha = document.getElementById('fecha').value;
-            const notas = document.getElementById('notas').value;
-            
-            if (clientIndex === '') {
-                alert('Selecciona un cliente');
-                return;
-            }
-            
-            if (!fecha) {
-                alert('Selecciona una fecha');
-                return;
-            }
-            
-            const client = window.clients[clientIndex];
-            let cantidad, precio, total, bines = 0;
-            
-            if (tipo === 'logistica') {
-                bines = parseInt(document.getElementById('cantidadBines').value) || 0;
-                cantidad = parseFloat(document.getElementById('cantidadLogistica').value) || 0;
-                precio = parseFloat(document.getElementById('precioLogistica').value) || 0;
-                
-                if (cantidad <= 0 || precio <= 0) {
-                    alert('Ingresa libras y precio');
-                    return;
-                }
-                
-                if (precio !== client.precioCamaron) {
-                    client.precioCamaron = precio;
-                }
-            } else {
-                cantidad = parseFloat(document.getElementById('cantidadHielo').value) || 0;
-                precio = parseFloat(document.getElementById('precioHielo').value) || 0;
-                
-                if (cantidad <= 0 || precio <= 0) {
-                    alert('Ingresa sacos y precio');
-                    return;
-                }
-                
-                if (precio !== client.precioHielo) {
-                    client.precioHielo = precio;
-                }
-            }
-            
-            total = cantidad * precio;
-            const comision = total * 0.015;
-            
-            const order = {
-                id: Date.now(),
-                fecha,
-                cliente: client.nombre,
-                tipo,
-                bines,
-                cantidad,
-                precio,
-                total,
-                comision,
-                estado: 'pendiente',
-                notas
-            };
-            
-            window.orders.push(order);
-            await window.saveOrderToFirebase(order);
-            
-            // Clear form
-            document.getElementById('tipoPedido').value = 'logistica';
-            document.getElementById('cliente').value = '';
-            document.getElementById('cantidadBines').value = '';
-            document.getElementById('cantidadBines').value = '';
-            document.getElementById('cantidadLogistica').value = '';
-            document.getElementById('precioLogistica').value = '';
-            document.getElementById('cantidadHielo').value = '';
-            document.getElementById('precioHielo').value = '';
-            document.getElementById('fecha').valueAsDate = new Date();
-            document.getElementById('notas').value = '';
-            document.getElementById('clientPriceCamaron').textContent = '';
-            document.getElementById('clientPriceHielo').textContent = '';
-            document.getElementById('binsInfo').textContent = '';
-            
-            updateFormFields();
-            calculateCommission();
-            
-            alert('✅ Pedido guardado');
-            displayOrders();
-            updateSummary();
-        }
-
-        function displayOrders() {
-            const filtered = getFilteredOrders();
-            displayFilteredOrders(filtered);
-            updateClientFilter();
-        }
-
-        
-        async function addInvoiceDate(orderId) {
-            const order = window.orders.find(o => o.id === orderId);
-            if (!order) return;
-            
-            const fechaFactura = prompt('Ingresa la fecha de emisión de la factura (YYYY-MM-DD):');
-            if (!fechaFactura) return;
-            
-            // Validar formato de fecha
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaFactura)) {
-                alert('Formato inválido. Usa: YYYY-MM-DD (Ej: 2026-02-16)');
-                return;
-            }
-            
-            // Buscar cliente para obtener días de crédito
-            const client = window.clients.find(c => c.nombre === order.cliente);
-            const diasCredito = client?.diasCredito || 0;
-            
-            // Calcular fecha de pago
-            const fechaFacturaDate = new Date(fechaFactura + 'T00:00:00');
-            const fechaPagoDate = new Date(fechaFacturaDate);
-            fechaPagoDate.setDate(fechaPagoDate.getDate() + diasCredito);
-            
-            order.fechaFactura = fechaFactura;
-            order.fechaPago = fechaPagoDate.toISOString().split('T')[0];
-            order.diasCredito = diasCredito;
-            
-            await window.saveOrderToFirebase(order);
-            displayOrders();
-            
-            alert(`✅ Factura registrada\n\nFecha factura: ${fechaFactura}\nDías crédito: ${diasCredito}\nFecha pago: ${order.fechaPago}`);
-        }
-
-
-function displayFilteredOrders(filteredOrders) {
-            const tbody = document.getElementById('ordersBody');
-            const tfoot = document.getElementById('ordersFooter');
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            tbody.innerHTML = '';
-            filteredOrders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-            
-            // Variables para totales
-            let totalBines = 0;
-            let totalCantidadCamaron = 0;
-            let totalCantidadHielo = 0;
-            let totalGeneral = 0;
-            let totalComisiones = 0;
-            
-            filteredOrders.forEach(order => {
-                const row = tbody.insertRow();
-                
-                // Acumular totales
-                totalGeneral += order.total;
-                totalComisiones += order.comision;
-                
-                // Obtener bines del pedido (valor ingresado manualmente)
-                const bines = order.bines || 0;
-                
-                if (order.tipo === 'logistica') {
-                    totalCantidadCamaron += order.cantidad;
-                    totalBines += bines;
-                } else {
-                    totalCantidadHielo += order.cantidad;
-                }
-                
-                // Formato de cantidad (sin decimales, sin texto adicional)
-                const cantidadText = order.tipo === 'logistica' 
-                    ? Math.round(order.cantidad).toLocaleString('en-US')
-                    : Math.round(order.cantidad).toLocaleString('en-US');
-                
-                // Formato de precio (3 decimales, solo número)
-                const precioText = order.precio.toFixed(3);
-                
-                // Tipo sin emojis
-                const tipoText = order.tipo === 'logistica' ? 'Logística' : 'Hielo';
-                
-                // Bines (solo para logística)
-                const binesText = order.tipo === 'logistica' ? bines.toLocaleString('en-US') : '-';
-                
-                // Determinar estado
-                let statusClass, statusText;
-                if (order.estado === 'pagado') {
-                    statusClass = 'status-paid';
-                    statusText = 'Pagado';
-                } else if (order.fechaPago) {
-                    const fechaPago = new Date(order.fechaPago);
-                    if (fechaPago < today) {
-                        statusClass = 'status-vencido';
-                        statusText = 'Vencido';
-                    } else {
-                        statusClass = 'status-pending';
-                        statusText = 'Pendiente';
-                    }
-                } else {
-                    statusClass = 'status-pending';
-                    statusText = 'Sin Factura';
-                }
-                
-                const fechaFacturaHtml = order.fechaFactura 
-                    ? order.fechaFactura
-                    : `<button class="action-btn" style="background: #17a2b8; color: white;" data-action="add-invoice" data-id="${order.id}">📄 Agregar</button>`;
-                
-                const fechaPagoHtml = order.fechaPago 
-                    ? `<strong>${order.fechaPago}</strong>`
-                    : '-';
-                
-                row.innerHTML = `
-                    <td>${order.fecha}</td>
-                    <td>${order.cliente}</td>
-                    <td>${tipoText}</td>
-                    <td style="text-align: right;">${binesText}</td>
-                    <td style="text-align: right;">${cantidadText}</td>
-                    <td style="text-align: right;">${precioText}</td>
-                    <td style="text-align: right;">${order.total.toFixed(2)}</td>
-                    <td style="text-align: right;"><strong>${order.comision.toFixed(2)}</strong></td>
-                    <td>${fechaFacturaHtml}</td>
-                    <td>${fechaPagoHtml}</td>
-                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    <td>
-                        <button class="action-btn" style="background: #007bff; color: white;" data-action="edit" data-id="${order.id}">✏️</button>
-                        ${order.estado === 'pendiente' 
-                            ? `<button class="action-btn btn-pay" data-action="pay" data-id="${order.id}">✓</button>`
-                            : '<span style="color: #28a745;">✓</span>'}
-                        <button class="action-btn btn-delete" data-action="delete" data-id="${order.id}">✕</button>
-                    </td>
-                `;
-            });
-            
-            const buttons = tbody.querySelectorAll('button[data-action]');
-            buttons.forEach(button => {
-                button.addEventListener('click', async function() {
-                    const action = this.getAttribute('data-action');
-                    const orderId = parseInt(this.getAttribute('data-id'));
-                    
-                    if (action === 'edit') {
-                        openEditModal(orderId);
-                    } else if (action === 'pay') {
-                        await markAsPaid(orderId);
-                    } else if (action === 'delete') {
-                        await deleteOrder(orderId);
-                    } else if (action === 'add-invoice') {
-                        await addInvoiceDate(orderId);
-                    }
-                });
-            });
-            
-            if (filteredOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 30px; color: #999;">No hay pedidos</td></tr>';
-                tfoot.style.display = 'none';
-            } else {
-                // Actualizar footer con totales
-                let cantidadText = '';
-                if (totalCantidadCamaron > 0 && totalCantidadHielo > 0) {
-                    cantidadText = `Logística: ${Math.round(totalCantidadCamaron).toLocaleString('en-US')}<br>Hielo: ${Math.round(totalCantidadHielo).toLocaleString('en-US')}`;
-                } else if (totalCantidadCamaron > 0) {
-                    cantidadText = Math.round(totalCantidadCamaron).toLocaleString('en-US');
-                } else if (totalCantidadHielo > 0) {
-                    cantidadText = Math.round(totalCantidadHielo).toLocaleString('en-US');
-                }
-                
-                // Footer Bines
-                const binesText = totalBines > 0 ? totalBines.toLocaleString('en-US') : '-';
-                
-                document.getElementById('footerBines').innerHTML = binesText;
-                document.getElementById('footerCantidad').innerHTML = cantidadText || '-';
-                document.getElementById('footerTotal').textContent = totalGeneral.toFixed(2);
-                document.getElementById('footerComision').textContent = totalComisiones.toFixed(2);
-                
-                tfoot.style.display = 'table-footer-group';
-            }
-        }
-
-
-        function filterOrders() {
-            displayOrders();
-        }
-
-        async function markAsPaid(orderId) {
-            const order = window.orders.find(o => o.id === orderId);
-            if (!order) return;
-            
-            if (confirm(`¿Cobrada?\nCliente: ${order.cliente}\nComisión: $${order.comision.toFixed(2)}`)) {
-                order.estado = 'pagado';
-                await window.saveOrderToFirebase(order);
-                displayOrders();
-                updateSummary();
-                alert('✅ Marcado como cobrado');
-            }
-        }
-
-        async function deleteOrder(orderId) {
-            const order = window.orders.find(o => o.id === orderId);
-            if (!order) return;
-            
-            if (confirm(`¿Eliminar pedido?\n${order.cliente} - $${order.comision.toFixed(2)}`)) {
-                window.orders = window.orders.filter(o => o.id !== orderId);
-                if (order.firebaseId) {
-                    await window.deleteFromFirebase('orders', order.firebaseId);
-                }
-                displayOrders();
-                updateSummary();
-                alert('✅ Eliminado');
-            }
-        }
-
-        async function saveClient() {
-            const nombre = document.getElementById('nombreCliente').value.trim();
-            const precioCamaron = parseFloat(document.getElementById('precioClienteCamaron').value) || 0;
-            const precioHielo = parseFloat(document.getElementById('precioClienteHielo').value) || 0;
-            const librasPorBin = parseFloat(document.getElementById('librasPorBin').value) || 1000;
-            const diasCredito = parseInt(document.getElementById('diasCredito').value) || 0;
-            
-            if (!nombre) {
-                alert('Ingresa el nombre');
-                return;
-            }
-            
-            if (precioCamaron <= 0 && precioHielo <= 0) {
-                alert('Ingresa al menos un precio');
-                return;
-            }
-            
-            const client = {
-                nombre,
-                precioCamaron,
-                precioHielo,
-                librasPorBin,
-                diasCredito,
-                activo: true
-            };
-            
-            window.clients.push(client);
-            await window.saveClientToFirebase(client);
-            
-            document.getElementById('nombreCliente').value = '';
-            document.getElementById('precioClienteCamaron').value = '';
-            document.getElementById('precioClienteHielo').value = '';
-            document.getElementById('librasPorBin').value = '1000';
-            document.getElementById('diasCredito').value = '0';
-            
-            updateClientSelect();
-            displayClients();
-            alert('✅ Cliente agregado');
-        }
-
-        function displayClients() {
-            const tbody = document.getElementById('clientsBody');
-            tbody.innerHTML = '';
-            
-            window.clients.forEach((client, index) => {
-                const row = tbody.insertRow();
-                const statusBadge = client.activo === false 
-                    ? '<span class="status-badge" style="background: #f8d7da; color: #721c24;">Inactivo</span>' 
-                    : '<span class="status-badge status-paid">Activo</span>';
-                
-                const diasCredito = client.diasCredito || 0;
-                const creditoText = diasCredito === 0 ? 'Contado' : `${diasCredito} días`;
-                
-                row.innerHTML = `
-                    <td><strong>${client.nombre}</strong> ${statusBadge}</td>
-                    <td>$${client.precioCamaron.toFixed(3)}/lb</td>
-                    <td>$${client.precioHielo.toFixed(3)}/saco</td>
-                    <td><strong>${client.librasPorBin || 1000}</strong> lb</td>
-                    <td><strong>${creditoText}</strong></td>
-                    <td>
-                        ${client.activo !== false 
-                            ? `<button class="action-btn" style="background: #007bff; color: white;" data-action="edit" data-index="${index}">✏️</button>
-                               <button class="action-btn" style="background: #ffc107; color: #000;" data-action="deactivate" data-index="${index}">⏸️</button>`
-                            : `<button class="action-btn" style="background: #28a745; color: white;" data-action="reactivate" data-index="${index}">✅</button>`
-                        }
-                        <button class="action-btn btn-delete" data-action="delete" data-index="${index}">🗑️</button>
-                    </td>
-                `;
-            });
-            
-            const buttons = tbody.querySelectorAll('button[data-action]');
-            buttons.forEach(button => {
-                button.addEventListener('click', async function() {
-                    const action = this.getAttribute('data-action');
-                    const index = parseInt(this.getAttribute('data-index'));
-                    
-                    switch(action) {
-                        case 'edit':
-                            editClient(index);
-                            break;
-                        case 'delete':
-                            await confirmDeleteClient(index);
-                            break;
-                        case 'deactivate':
-                            await deactivateClient(index);
-                            break;
-                        case 'reactivate':
-                            await reactivateClient(index);
-                            break;
-                    }
-                });
-            });
-            
-            if (window.clients.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: #999;">No hay clientes</td></tr>';
-            }
-        }
-
-        async function deactivateClient(index) {
-            const client = window.clients[index];
-            if (confirm(`¿Desactivar "${client.nombre}"?`)) {
-                window.clients[index].activo = false;
-                await window.saveClientToFirebase(window.clients[index]);
-                displayClients();
-                alert('⏸️ Desactivado');
-            }
-        }
-
-        async function reactivateClient(index) {
-            const client = window.clients[index];
-            if (confirm(`¿Reactivar "${client.nombre}"?`)) {
-                window.clients[index].activo = true;
-                await window.saveClientToFirebase(window.clients[index]);
-                updateClientSelect();
-                displayClients();
-                alert('✅ Reactivado');
-            }
-        }
-
-        async function confirmDeleteClient(index) {
-            const client = window.clients[index];
-            if (confirm(`¿Eliminar "${client.nombre}"?`)) {
-                const firebaseId = client.firebaseId;
-                window.clients.splice(index, 1);
-                if (firebaseId) {
-                    await window.deleteFromFirebase('clients', firebaseId);
-                }
-                updateClientSelect();
-                displayClients();
-                alert('✅ Eliminado');
-            }
-        }
-
-        function editClient(index) {
-            const client = window.clients[index];
-            
-            if (confirm(`¿Editar "${client.nombre}"?`)) {
-                showTab('clientes');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                
-                document.getElementById('nombreCliente').value = client.nombre;
-                document.getElementById('precioClienteCamaron').value = client.precioCamaron.toFixed(3);
-                document.getElementById('precioClienteHielo').value = client.precioHielo.toFixed(3);
-                document.getElementById('librasPorBin').value = client.librasPorBin || 1000;
-                document.getElementById('diasCredito').value = client.diasCredito || 0;
-                
-                if (confirm('Modifica y guarda. ¿Eliminar actual?')) {
-                    confirmDeleteClient(index);
-                }
-            }
-        }
-
-        
-        function updateSummary() {
-            const filtroEstado = document.getElementById('resumenFiltroEstado')?.value;
-            const fechaDesde = document.getElementById('resumenFechaDesde')?.value;
-            const fechaHasta = document.getElementById('resumenFechaHasta')?.value;
-
-            let filteredOrders = [...window.orders];
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            // Aplicar filtro de estado
-            if (filtroEstado && filtroEstado !== 'todos') {
-                if (filtroEstado === 'vencido') {
-                    filteredOrders = filteredOrders.filter(o => {
-                        if (o.estado === 'pagado' || !o.fechaPago) return false;
-                        const fechaPago = new Date(o.fechaPago);
-                        return fechaPago < today;
-                    });
-                } else {
-                    filteredOrders = filteredOrders.filter(o => o.estado === filtroEstado);
-                }
-            }
-
-            // Aplicar filtro de fechas
-            if (fechaDesde) {
-                filteredOrders = filteredOrders.filter(o => o.fecha >= fechaDesde);
-            }
-            if (fechaHasta) {
-                filteredOrders = filteredOrders.filter(o => o.fecha <= fechaHasta);
-            }
-
-            const totalComisiones = filteredOrders.reduce((sum, o) => sum + o.comision, 0);
-            const comisionesPendientes = filteredOrders.filter(o => o.estado === 'pendiente').reduce((sum, o) => sum + o.comision, 0);
-            const comisionesPagadas = filteredOrders.filter(o => o.estado === 'pagado').reduce((sum, o) => sum + o.comision, 0);
-            
-            const totalLibras = filteredOrders.filter(o => o.tipo === 'logistica').reduce((sum, o) => sum + o.cantidad, 0);
-            const totalSacos = filteredOrders.filter(o => o.tipo === 'hielo').reduce((sum, o) => sum + o.cantidad, 0);
-            
-            document.getElementById('totalComisiones').textContent = totalComisiones.toFixed(2);
-            document.getElementById('comisionesPendientes').textContent = comisionesPendientes.toFixed(2);
-            document.getElementById('comisionesPagadas').textContent = comisionesPagadas.toFixed(2);
-            document.getElementById('totalLibras').textContent = totalLibras.toFixed(2);
-            document.getElementById('totalSacos').textContent = totalSacos;
-            document.getElementById('totalPedidos').textContent = filteredOrders.length;
-
-            // Generar resumen por cliente
-            generateClientSummary();
-        }
-
-        
-        function generateReport() {
-            const totalComisiones = window.orders.reduce((sum, o) => sum + o.comision, 0);
-            const comisionesPendientes = window.orders.filter(o => o.estado === 'pendiente').reduce((sum, o) => sum + o.comision, 0);
-            const comisionesPagadas = window.orders.filter(o => o.estado === 'pagado').reduce((sum, o) => sum + o.comision, 0);
-            
-            const totalLibras = window.orders.filter(o => o.tipo === 'logistica').reduce((sum, o) => sum + o.cantidad, 0);
-            const totalSacos = window.orders.filter(o => o.tipo === 'hielo').reduce((sum, o) => sum + o.cantidad, 0);
-            
-            const pedidosCamaron = window.orders.filter(o => o.tipo === 'logistica').length;
-            const pedidosHielo = window.orders.filter(o => o.tipo === 'hielo').length;
-            
-            const pendientes = window.orders.filter(o => o.estado === 'pendiente');
-            
-            const report = `*📊 REPORTE DE COMISIONES*
-_Fecha: ${new Date().toLocaleDateString('es-ES')}_
-
-*RESUMEN GENERAL*
-📦 Total Pedidos: ${window.orders.length}
-  Logística: ${pedidosCamaron} pedidos
-  Hielo: ${pedidosHielo} pedidos
-
-*COMISIONES (1.5%)*
-💰 Total Generado: *$${totalComisiones.toFixed(2)}*
-⏳ Pendientes: $${comisionesPendientes.toFixed(2)}
-✅ Pagadas: $${comisionesPagadas.toFixed(2)}
-
-*VOLUMEN DE VENTAS*
-Logística: ${totalLibras.toFixed(2)} lb
-Hielo: ${totalSacos} sacos (${(totalSacos * 50).toLocaleString()} lb)
-
-${pendientes.length > 0 ? `*PENDIENTES DE COBRO*
-${pendientes.map(o => 
-`• ${o.fecha} | ${o.cliente}
-  ${o.tipo === 'logistica' ? '' : ''} ${o.tipo === 'logistica' ? o.cantidad.toFixed(2) + ' lb' : o.cantidad + ' sacos'} → *$${o.comision.toFixed(2)}*`
-).join('\n')}
-
-*TOTAL A PAGAR: $${comisionesPendientes.toFixed(2)}*` : '_No hay comisiones pendientes_ ✅'}
-
-━━━━━━━━━━━━━━━━━
-_Sistema de Gestión de Pesca_`;
-            
-            document.getElementById('reportText').textContent = report;
-            document.getElementById('reportOutput').style.display = 'block';
-        }
-
-        function copyReport() {
-            const reportText = document.getElementById('reportText').textContent;
-            navigator.clipboard.writeText(reportText).then(() => {
-                alert('✅ Copiado');
-            });
-        }
-
-        // Prevenir scroll accidental en inputs numéricos
-        document.addEventListener('wheel', function(e) {
-            if (document.activeElement.type === 'number') {
-                document.activeElement.blur();
-            }
-        });
-    </script>
+    <!-- ── CONFIG ── -->
+    <div class="tabCard" id="tab-cfg" style="display:none">
+      <div class="cfgBox">
+        <strong>URL del Google Apps Script Web App</strong><br>
+        Ingresa la URL y presiona <strong>Guardar URL</strong> para activar la sincronización con Google Sheets en todas las secciones.
+        <div class="cfgUrlRow">
+          <input type="text" id="cfgUrlInput" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+          <button class="btnSaveUrl" onclick="guardarUrl()">💾 Guardar URL</button>
+        </div>
+        <div class="cfgStatus" id="cfgStatus"></div>
+      </div>
+      <div class="infoBox">
+        <strong>Instrucciones de configuración</strong><br>
+        <strong>1.</strong> Abre tu Google Sheet → Extensiones → Apps Script → pega el código de abajo → Guarda (Ctrl+S).<br>
+        <strong>2.</strong> Implementar → Nueva implementación → Aplicación web → Ejecutar como: Yo → Quién tiene acceso: Cualquier persona → Implementar → <strong>Copia la URL</strong>.<br>
+        <strong>3.</strong> Pega la URL arriba y presiona <strong>Guardar URL</strong>. Queda activa para todos hasta que un Admin la cambie.<br>
+        <strong>4.</strong> GitHub Pages: sube <code>index.html</code> → Settings → Pages → Branch: main → Save.
+      </div>
+      <div class="codeBox">
+        <strong>Código para Google Apps Script:</strong>
+        <pre>function doPost(e) {
+  var sheet = SpreadsheetApp
+    .openById('1Aaj7t2bNjOfuvHazjxI6DLXN6cHUEAFc')
+    .getActiveSheet();
+  var d = JSON.parse(e.postData.contents);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['FECHA','HORA','MOVIMIENTO','GUARDIA','TURNO','GUÍA',
+      'COMPAÑÍA','NOMBRE/APELLIDO','PLACA','DISCO','KILOMETRAJE',
+      'COMBUSTIBLE','RETORNO/DESTINO','LLANTA EMERGENCIA',
+      'EXTINTOR','KIT','BINES','SACOS','GAVETAS','OBSERVACIONES']);
+  }
+  sheet.appendRow([d.fecha,d.hora,d.tipo,d.guardia,d.turno,d.guia,d.compania,
+    d.nombre,d.placa,d.disco,d.km ? Number(d.km) : '',d.comb,d.destino,
+    d.llanta,d.extintor,d.kit,
+    d.bines ? Number(d.bines) : 0,
+    d.sacos ? Number(d.sacos) : 0,
+    d.gavetas ? Number(d.gavetas) : 0,
+    d.obs]);
+  return ContentService
+    .createTextOutput(JSON.stringify({status:'ok'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+function doGet(e) {
+  var sheet = SpreadsheetApp
+    .openById('1Aaj7t2bNjOfuvHazjxI6DLXN6cHUEAFc')
+    .getActiveSheet();
+  return ContentService
+    .createTextOutput(JSON.stringify(sheet.getDataRange().getValues()))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div id="modalOverlay" style="display:none">
+  <div id="modalBox">
+    <div id="modalTitle">Nuevo Usuario</div>
+    <div class="modalField"><label>Usuario *</label><input type="text" id="mUser" placeholder="Nombre de usuario"></div>
+    <div class="modalField"><label>Contraseña *</label><input type="password" id="mPass" placeholder="Contraseña"></div>
+    <div class="modalField"><label>Rol *</label>
+      <select id="mRol">
+        <option value="usuario">Usuario</option>
+        <option value="supervisor">Supervisor</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <div id="modalBtns">
+      <button class="btnSecondary" onclick="cerrarModal()">Cancelar</button>
+      <button class="btnPrimary" onclick="guardarUsuario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR REGISTRO -->
+<div id="editRecordOverlay" style="display:none">
+  <div id="editRecordBox">
+    <div id="editRecordTitle">✏️ Editar Registro</div>
+    <div class="grid6">
+      <div class="formField"><label>Fecha</label><input type="date" id="er_fecha"></div>
+      <div class="formField"><label>Hora</label><input type="time" id="er_hora"></div>
+      <div class="formField"><label>Guardia</label><input type="text" id="er_guardia"></div>
+      <div class="formField"><label>Turno</label><select id="er_turno"><option value="">--</option><option>DÍA</option><option>NOCHE</option></select></div>
+      <div class="formField"><label>Guía</label><input type="text" id="er_guia"></div>
+      <div class="formField"><label>Compañía</label><input type="text" id="er_compania"></div>
+    </div>
+    <div style="margin-top:12px">
+      <div class="formField"><label>Tipo de Movimiento</label>
+        <select id="er_tipo"><option value="ENTRADA">ENTRADA</option><option value="SALIDA">SALIDA</option></select>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <div class="formField"><label>Nombre / Apellido</label><input type="text" id="er_nombre"></div>
+      <div class="formField"><label>Retorno / Destino</label><input type="text" id="er_destino"></div>
+    </div>
+    <div class="grid4" style="margin-top:12px">
+      <div class="formField"><label>Placa</label><input type="text" id="er_placa"></div>
+      <div class="formField"><label>Disco</label><input type="text" id="er_disco"></div>
+      <div class="formField"><label>Kilometraje</label><input type="number" id="er_km"></div>
+      <div class="formField"><label>Combustible</label><select id="er_comb"><option value="">--</option><option>1/4</option><option>1/2</option><option>3/4</option><option>Lleno</option><option>Vacío</option></select></div>
+    </div>
+    <div class="grid3" style="margin-top:12px">
+      <div class="formField"><label>Llanta Emergencia</label><select id="er_llanta"><option>Sí</option><option>No</option></select></div>
+      <div class="formField"><label>Extintor</label><select id="er_extintor"><option>Sí</option><option>No</option></select></div>
+      <div class="formField"><label>Kit</label><select id="er_kit"><option>Sí</option><option>No</option></select></div>
+    </div>
+    <div class="grid3" style="margin-top:12px">
+      <div class="formField"><label>Bines</label><input type="number" id="er_bines" min="0"></div>
+      <div class="formField"><label>Sacos</label><input type="number" id="er_sacos" min="0"></div>
+      <div class="formField"><label>Gavetas</label><input type="number" id="er_gavetas" min="0"></div>
+    </div>
+    <div class="formField" style="margin-top:12px"><label>Observaciones</label><textarea id="er_obs"></textarea></div>
+    <div id="editRecordBtns">
+      <button class="btnSecondary" onclick="cerrarEditRecord()">Cancelar</button>
+      <button class="btnPrimary" onclick="guardarEditRecord()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACTION MENU BACKDROP -->
+<div id="menuBackdrop" style="display:none;position:fixed;inset:0;z-index:299;" onclick="cerrarMenus()"></div>
+
+<div id="toastEl"></div>
+
+<script>
+// ════════════════ ESTADO ════════════════
+var APP = {
+  users: [{ id:1, username:'LCARRASCO', password:'54321', role:'admin', activo:true }],
+  historial: [],
+  scriptUrl: '',
+  currentUser: null,
+  editId: null,
+  editRecordIdx: null,
+  filteredData: []
+};
+
+// localStorage helpers
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v)); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+// Init
+(function(){
+  try{
+    var u=lsGet('fjUsers'); if(u) APP.users=JSON.parse(u);
+    var h=lsGet('fjHist'); if(h) APP.historial=JSON.parse(h);
+    var url=lsGet('fjUrl'); if(url) APP.scriptUrl=url;
+  }catch(e){}
+})();
+
+window.onload = function(){
+  try{
+    var sess=lsGet('fjSess');
+    if(sess){ var su=JSON.parse(sess); var f=APP.users.find(function(x){return x.id===su.id&&x.activo;}); if(f){APP.currentUser=f;iniciarApp();return;} }
+  }catch(e){}
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('appPage').style.display='none';
+};
+
+// ════════════════ LOGIN ════════════════
+document.getElementById('inputUser').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+document.getElementById('inputPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+
+function doLogin(){
+  var u=(document.getElementById('inputUser').value||'').trim().toUpperCase();
+  var p=document.getElementById('inputPass').value||'';
+  var found=APP.users.find(function(x){return x.username.toUpperCase()===u&&x.password===p&&x.activo;});
+  if(!found){document.getElementById('loginErr').style.display='block';return;}
+  APP.currentUser=found; lsSet('fjSess',found);
+  document.getElementById('loginErr').style.display='none';
+  iniciarApp();
+}
+
+function doLogout(){
+  APP.currentUser=null; lsDel('fjSess');
+  document.getElementById('appPage').style.display='none';
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('inputUser').value='';
+  document.getElementById('inputPass').value='';
+}
+
+function iniciarApp(){
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('appPage').style.display='block';
+  document.getElementById('topUsername').textContent=APP.currentUser.username;
+  var roleLabel = {admin:'Administrador', supervisor:'Supervisor', usuario:'Usuario'};
+  document.getElementById('topRoleBadge').textContent=roleLabel[APP.currentUser.role]||APP.currentUser.role;
+  var isAdmin=APP.currentUser.role==='admin';
+  document.getElementById('tabBtnUsr').style.display=isAdmin?'inline-block':'none';
+  document.getElementById('tabBtnCfg').style.display=isAdmin?'inline-block':'none';
+  if(APP.scriptUrl) document.getElementById('cfgUrlInput').value=APP.scriptUrl;
+  if(APP.scriptUrl){ var st=document.getElementById('cfgStatus'); st.textContent='✅ URL guardada y activa'; st.className='cfgStatus ok'; }
+  var now=new Date();
+  document.getElementById('fFecha').value=now.toISOString().split('T')[0];
+  document.getElementById('fHora').value=now.toTimeString().slice(0,5);
+  showTab('reg');
+}
+
+// ════════════════ TABS ════════════════
+function showTab(t){
+  ['reg','his','usr','cfg'].forEach(function(id){
+    document.getElementById('tab-'+id).style.display=id===t?'block':'none';
+  });
+  ['Reg','His','Usr','Cfg'].forEach(function(s,i){
+    var el=document.getElementById('tabBtn'+s); if(el) el.className=['reg','his','usr','cfg'][i]===t?'tabBtn active':'tabBtn';
+  });
+  if(t==='his') renderHistorial();
+  if(t==='usr') renderUsuarios();
+}
+
+// ════════════════ TOAST ════════════════
+function showToast(msg,type){
+  var el=document.getElementById('toastEl');
+  el.textContent=msg; el.className='show'+(type==='ok'?' toastOk':type==='err'?' toastErr':'');
+  setTimeout(function(){el.className='';},3200);
+}
+
+// ════════════════ FORM ════════════════
+function limpiarForm(){
+  var now=new Date();
+  document.getElementById('fFecha').value=now.toISOString().split('T')[0];
+  document.getElementById('fHora').value=now.toTimeString().slice(0,5);
+  ['fGuardia','fGuia','fCompania','fNombre','fDestino','fPlaca','fDisco','fObs'].forEach(function(id){document.getElementById(id).value='';});
+  ['fKm','fBines','fSacos','fGavetas'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('fComb').value='';
+  document.getElementById('fTurno').value='';
+  document.getElementById('fEntrada').checked=true;
+  ['fLlanta','fExtintor','fKit'].forEach(function(n){var el=document.querySelector('input[name="'+n+'"][value="No"]');if(el)el.checked=true;});
+}
+
+function getV(id){return (document.getElementById(id).value||'').trim();}
+function getR(name){var el=document.querySelector('input[name="'+name+'"]:checked');return el?el.value:'No';}
+
+function guardarRegistro(){
+  var fecha=getV('fFecha'),hora=getV('fHora'),guardia=getV('fGuardia'),nombre=getV('fNombre');
+  if(!fecha||!hora||!guardia||!nombre){showToast('Completa: Fecha, Hora, Guardia y Nombre','err');return;}
+  var reg={
+    fecha:fecha, hora:hora, tipo:getR('fTipo'),
+    guardia:guardia, turno:document.getElementById('fTurno').value||'',
+    guia:getV('fGuia'), compania:getV('fCompania'),
+    nombre:nombre, placa:getV('fPlaca').toUpperCase(), disco:getV('fDisco'),
+    km:document.getElementById('fKm').value||'',
+    comb:document.getElementById('fComb').value||'',
+    destino:getV('fDestino'),
+    llanta:getR('fLlanta'), extintor:getR('fExtintor'), kit:getR('fKit'),
+    bines:document.getElementById('fBines').value||'0',
+    sacos:document.getElementById('fSacos').value||'0',
+    gavetas:document.getElementById('fGavetas').value||'0',
+    obs:getV('fObs'),
+    _id: Date.now()
+  };
+  APP.historial.unshift(reg);
+  if(APP.historial.length>500) APP.historial=APP.historial.slice(0,500);
+  lsSet('fjHist',APP.historial);
+
+  var btn=document.getElementById('btnGuardar');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Guardando...';
+
+  function finish(msg,type){showToast(msg,type);limpiarForm();btn.disabled=false;btn.innerHTML='Guardar Registro';}
+
+  if(APP.scriptUrl){
+    fetch(APP.scriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(reg)})
+      .then(function(){finish('Registro guardado correctamente','ok');})
+      .catch(function(){finish('Guardado localmente. Sin conexión con Sheets.','ok');});
+  } else {
+    finish('Registro guardado localmente','ok');
+  }
+}
+
+// ════════════════ HISTORIAL ════════════════
+function renderHistorial(){
+  APP.filteredData = APP.historial.slice();
+  aplicarFiltros();
+}
+
+function filtrarHistorial(){
+  aplicarFiltros();
+}
+
+function aplicarFiltros(){
+  var q=(document.getElementById('histSearch').value||'').toLowerCase();
+  var flt={
+    fecha:getV('flt_fecha'), hora:getV('flt_hora'), tipo:(document.getElementById('flt_tipo').value||'').toLowerCase(),
+    guardia:(getV('flt_guardia')||'').toLowerCase(), turno:(document.getElementById('flt_turno').value||'').toLowerCase(),
+    guia:(getV('flt_guia')||'').toLowerCase(), compania:(getV('flt_compania')||'').toLowerCase(),
+    nombre:(getV('flt_nombre')||'').toLowerCase(), placa:(getV('flt_placa')||'').toLowerCase(),
+    disco:(getV('flt_disco')||'').toLowerCase(), km:(getV('flt_km')||'').toLowerCase(),
+    comb:(document.getElementById('flt_comb').value||'').toLowerCase(),
+    destino:(getV('flt_destino')||'').toLowerCase(),
+    llanta:(document.getElementById('flt_llanta').value||'').toLowerCase(),
+    extintor:(document.getElementById('flt_extintor').value||'').toLowerCase(),
+    kit:(document.getElementById('flt_kit').value||'').toLowerCase(),
+    bines:(getV('flt_bines')||'').toLowerCase(), sacos:(getV('flt_sacos')||'').toLowerCase(),
+    gavetas:(getV('flt_gavetas')||'').toLowerCase(), obs:(getV('flt_obs')||'').toLowerCase()
+  };
+
+  var data = APP.historial.filter(function(r){
+    if(q && !Object.values(r).some(function(v){return String(v).toLowerCase().indexOf(q)>=0;})) return false;
+    if(flt.fecha && r.fecha !== flt.fecha) return false;
+    if(flt.hora && r.hora !== flt.hora) return false;
+    if(flt.tipo && (r.tipo||'').toLowerCase().indexOf(flt.tipo)<0) return false;
+    if(flt.guardia && (r.guardia||'').toLowerCase().indexOf(flt.guardia)<0) return false;
+    if(flt.turno && (r.turno||'').toLowerCase().indexOf(flt.turno)<0) return false;
+    if(flt.guia && (r.guia||'').toLowerCase().indexOf(flt.guia)<0) return false;
+    if(flt.compania && (r.compania||'').toLowerCase().indexOf(flt.compania)<0) return false;
+    if(flt.nombre && (r.nombre||'').toLowerCase().indexOf(flt.nombre)<0) return false;
+    if(flt.placa && (r.placa||'').toLowerCase().indexOf(flt.placa)<0) return false;
+    if(flt.disco && (r.disco||'').toLowerCase().indexOf(flt.disco)<0) return false;
+    if(flt.km && String(r.km||'').toLowerCase().indexOf(flt.km)<0) return false;
+    if(flt.comb && (r.comb||'').toLowerCase().indexOf(flt.comb)<0) return false;
+    if(flt.destino && (r.destino||'').toLowerCase().indexOf(flt.destino)<0) return false;
+    if(flt.llanta && (r.llanta||'').toLowerCase().indexOf(flt.llanta)<0) return false;
+    if(flt.extintor && (r.extintor||'').toLowerCase().indexOf(flt.extintor)<0) return false;
+    if(flt.kit && (r.kit||'').toLowerCase().indexOf(flt.kit)<0) return false;
+    if(flt.bines && String(r.bines||'').indexOf(flt.bines)<0) return false;
+    if(flt.sacos && String(r.sacos||'').indexOf(flt.sacos)<0) return false;
+    if(flt.gavetas && String(r.gavetas||'').indexOf(flt.gavetas)<0) return false;
+    if(flt.obs && (r.obs||'').toLowerCase().indexOf(flt.obs)<0) return false;
+    return true;
+  });
+
+  APP.filteredData = data;
+  document.getElementById('histCount').textContent = '('+data.length+' de '+APP.historial.length+' registros)';
+  renderFilas(data);
+}
+
+function canEdit(){return APP.currentUser && (APP.currentUser.role==='admin'||APP.currentUser.role==='supervisor');}
+
+function renderFilas(data){
+  var tbody=document.getElementById('histBody');
+  if(!data.length){tbody.innerHTML='<tr class="emptyRow"><td colspan="21">No hay registros</td></tr>';return;}
+  tbody.innerHTML=data.map(function(r,i){
+    var tipo=r.tipo||'';
+    var cls=tipo==='ENTRADA'?'badgeEntrada':'badgeSalida';
+    var idx=APP.historial.indexOf(r);
+    return '<tr>'+
+      '<td class="actionCell">'+
+        '<button class="dotsBtn" onclick="toggleMenu(event,'+idx+')">⋯</button>'+
+        '<div class="actionMenu" id="menu_'+idx+'" style="display:none">'+
+          '<button onclick="abrirEditRecord('+idx+')" '+(canEdit()?'':'disabled')+'>✏️ Editar</button>'+
+          '<button class="danger" onclick="eliminarRegistro('+idx+')" '+(canEdit()?'':'disabled')+'>🗑️ Eliminar</button>'+
+        '</div>'+
+      '</td>'+
+      '<td>'+fmtFecha(r.fecha)+'</td>'+
+      '<td>'+fmtHora(r.hora)+'</td>'+
+      '<td><span class="badge '+cls+'">'+tipo+'</span></td>'+
+      '<td>'+(r.guardia||'')+'</td>'+
+      '<td>'+(r.turno||'')+'</td>'+
+      '<td>'+(r.guia||'')+'</td>'+
+      '<td>'+(r.compania||'')+'</td>'+
+      '<td>'+(r.nombre||'')+'</td>'+
+      '<td><strong>'+(r.placa||'')+'</strong></td>'+
+      '<td>'+(r.disco||'')+'</td>'+
+      '<td>'+(r.km||'')+'</td>'+
+      '<td>'+(r.comb||'')+'</td>'+
+      '<td>'+(r.destino||'')+'</td>'+
+      '<td>'+(r.llanta||'')+'</td>'+
+      '<td>'+(r.extintor||'')+'</td>'+
+      '<td>'+(r.kit||'')+'</td>'+
+      '<td>'+(r.bines||'')+'</td>'+
+      '<td>'+(r.sacos||'')+'</td>'+
+      '<td>'+(r.gavetas||'')+'</td>'+
+      '<td style="max-width:130px;word-break:break-word">'+(r.obs||'')+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function fmtFecha(f){
+  if(!f) return '';
+  var p=f.split('-'); if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0];
+  return f;
+}
+function fmtHora(h){ return h||''; }
+
+// ACTION MENU
+function toggleMenu(e,idx){
+  e.stopPropagation();
+  cerrarMenus();
+  var m=document.getElementById('menu_'+idx);
+  if(m){ m.style.display='block'; document.getElementById('menuBackdrop').style.display='block'; }
+}
+function cerrarMenus(){
+  document.querySelectorAll('.actionMenu').forEach(function(m){m.style.display='none';});
+  document.getElementById('menuBackdrop').style.display='none';
+}
+
+// ELIMINAR REGISTRO
+function eliminarRegistro(idx){
+  if(!canEdit()){showToast('Sin permisos para eliminar','err');return;}
+  if(!confirm('¿Eliminar este registro?')) return;
+  APP.historial.splice(idx,1);
+  lsSet('fjHist',APP.historial);
+  cerrarMenus();
+  renderHistorial();
+  showToast('Registro eliminado','ok');
+}
+
+// EDITAR REGISTRO
+function abrirEditRecord(idx){
+  cerrarMenus();
+  if(!canEdit()){showToast('Sin permisos para editar','err');return;}
+  var r=APP.historial[idx];
+  APP.editRecordIdx=idx;
+  document.getElementById('er_fecha').value=r.fecha||'';
+  document.getElementById('er_hora').value=r.hora||'';
+  document.getElementById('er_guardia').value=r.guardia||'';
+  document.getElementById('er_turno').value=r.turno||'';
+  document.getElementById('er_guia').value=r.guia||'';
+  document.getElementById('er_compania').value=r.compania||'';
+  document.getElementById('er_tipo').value=r.tipo||'ENTRADA';
+  document.getElementById('er_nombre').value=r.nombre||'';
+  document.getElementById('er_destino').value=r.destino||'';
+  document.getElementById('er_placa').value=r.placa||'';
+  document.getElementById('er_disco').value=r.disco||'';
+  document.getElementById('er_km').value=r.km||'';
+  document.getElementById('er_comb').value=r.comb||'';
+  document.getElementById('er_llanta').value=r.llanta||'No';
+  document.getElementById('er_extintor').value=r.extintor||'No';
+  document.getElementById('er_kit').value=r.kit||'No';
+  document.getElementById('er_bines').value=r.bines||'0';
+  document.getElementById('er_sacos').value=r.sacos||'0';
+  document.getElementById('er_gavetas').value=r.gavetas||'0';
+  document.getElementById('er_obs').value=r.obs||'';
+  document.getElementById('editRecordOverlay').style.display='flex';
+}
+
+function cerrarEditRecord(){ document.getElementById('editRecordOverlay').style.display='none'; APP.editRecordIdx=null; }
+
+function guardarEditRecord(){
+  var idx=APP.editRecordIdx;
+  if(idx===null||idx===undefined) return;
+  var r=APP.historial[idx];
+  r.fecha=document.getElementById('er_fecha').value;
+  r.hora=document.getElementById('er_hora').value;
+  r.guardia=(document.getElementById('er_guardia').value||'').trim();
+  r.turno=document.getElementById('er_turno').value;
+  r.guia=(document.getElementById('er_guia').value||'').trim();
+  r.compania=(document.getElementById('er_compania').value||'').trim();
+  r.tipo=document.getElementById('er_tipo').value;
+  r.nombre=(document.getElementById('er_nombre').value||'').trim();
+  r.destino=(document.getElementById('er_destino').value||'').trim();
+  r.placa=(document.getElementById('er_placa').value||'').trim().toUpperCase();
+  r.disco=(document.getElementById('er_disco').value||'').trim();
+  r.km=document.getElementById('er_km').value||'';
+  r.comb=document.getElementById('er_comb').value||'';
+  r.llanta=document.getElementById('er_llanta').value;
+  r.extintor=document.getElementById('er_extintor').value;
+  r.kit=document.getElementById('er_kit').value;
+  r.bines=document.getElementById('er_bines').value||'0';
+  r.sacos=document.getElementById('er_sacos').value||'0';
+  r.gavetas=document.getElementById('er_gavetas').value||'0';
+  r.obs=(document.getElementById('er_obs').value||'').trim();
+  lsSet('fjHist',APP.historial);
+  cerrarEditRecord();
+  renderHistorial();
+  showToast('Registro actualizado','ok');
+}
+
+document.getElementById('editRecordOverlay').addEventListener('click',function(e){if(e.target===e.currentTarget)cerrarEditRecord();});
+
+// ════════════════ EXPORT EXCEL ════════════════
+function exportarExcel(){
+  var data = APP.filteredData.length ? APP.filteredData : APP.historial;
+  if(!data.length){showToast('No hay registros para exportar','err');return;}
+
+  var headers=['FECHA','HORA','MOVIMIENTO','GUARDIA','TURNO','GUÍA','COMPAÑÍA',
+    'NOMBRE/APELLIDO','PLACA','DISCO','KILOMETRAJE','COMBUSTIBLE','RETORNO/DESTINO',
+    'LLANTA EMERGENCIA','EXTINTOR','KIT','BINES','SACOS','GAVETAS','OBSERVACIONES'];
+
+  var wsData=[headers];
+  data.forEach(function(r){
+    // Fecha como valor de fecha Excel
+    var fechaVal = r.fecha ? parseFecha(r.fecha) : '';
+    // Hora como valor de tiempo Excel
+    var horaVal = r.hora ? parseHora(r.hora) : '';
+    wsData.push([
+      fechaVal, horaVal,
+      r.tipo||'', r.guardia||'', r.turno||'', r.guia||'', r.compania||'',
+      r.nombre||'', r.placa||'', r.disco||'',
+      r.km!==''&&r.km!==null&&r.km!==undefined ? Number(r.km) : '',
+      r.comb||'', r.destino||'',
+      r.llanta||'', r.extintor||'', r.kit||'',
+      r.bines!==''&&r.bines!==undefined ? Number(r.bines) : 0,
+      r.sacos!==''&&r.sacos!==undefined ? Number(r.sacos) : 0,
+      r.gavetas!==''&&r.gavetas!==undefined ? Number(r.gavetas) : 0,
+      r.obs||''
+    ]);
+  });
+
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet(wsData);
+
+  // Formatos de columna
+  var numFmt = { fecha:'DD/MM/YYYY', hora:'HH:MM', num:'#,##0', gen:'@' };
+  var colFmts = [
+    numFmt.fecha, numFmt.hora, numFmt.gen, numFmt.gen, numFmt.gen, numFmt.gen, numFmt.gen,
+    numFmt.gen, numFmt.gen, numFmt.gen, numFmt.num, numFmt.gen, numFmt.gen,
+    numFmt.gen, numFmt.gen, numFmt.gen, numFmt.num, numFmt.num, numFmt.num, numFmt.gen
+  ];
+
+  var range=XLSX.utils.decode_range(ws['!ref']);
+  for(var R=1;R<=range.e.r;R++){
+    for(var C=0;C<=range.e.c;C++){
+      var addr=XLSX.utils.encode_cell({r:R,c:C});
+      if(!ws[addr]) continue;
+      ws[addr].z = colFmts[C] || numFmt.gen;
+    }
+  }
+
+  // Ancho de columnas
+  ws['!cols']=[
+    {wch:12},{wch:8},{wch:10},{wch:18},{wch:8},{wch:12},{wch:18},
+    {wch:22},{wch:10},{wch:8},{wch:12},{wch:12},{wch:18},
+    {wch:14},{wch:10},{wch:6},{wch:8},{wch:8},{wch:8},{wch:30}
+  ];
+
+  XLSX.utils.book_append_sheet(wb,ws,'Bitácora');
+  var now=new Date();
+  var fname='Bitacora_Seguridad_'+now.getFullYear()+pad(now.getMonth()+1)+pad(now.getDate())+'.xlsx';
+  XLSX.writeFile(wb,fname);
+  showToast('Excel exportado: '+fname,'ok');
+}
+
+function parseFecha(f){
+  // yyyy-mm-dd → número de fecha Excel
+  var p=f.split('-');
+  if(p.length===3){
+    var d=new Date(Number(p[0]),Number(p[1])-1,Number(p[2]));
+    return d;
+  }
+  return f;
+}
+function parseHora(h){
+  // hh:mm → fracción de día para Excel
+  if(!h) return '';
+  var p=h.split(':');
+  var hh=Number(p[0]||0), mm=Number(p[1]||0);
+  return (hh*3600+mm*60)/(86400);
+}
+function pad(n){return n<10?'0'+n:String(n);}
+
+// ════════════════ CONFIG URL ════════════════
+function guardarUrl(){
+  var val=(document.getElementById('cfgUrlInput').value||'').trim();
+  var st=document.getElementById('cfgStatus');
+  if(!val){ st.textContent='⚠️ Ingresa una URL válida.'; st.className='cfgStatus err'; return; }
+  if(val.indexOf('script.google.com')<0){ st.textContent='⚠️ La URL no parece ser de Google Apps Script.'; st.className='cfgStatus err'; return; }
+  APP.scriptUrl=val;
+  lsSet('fjUrl',val);
+  st.textContent='✅ URL guardada y activa para todas las secciones.'; st.className='cfgStatus ok';
+  showToast('URL guardada correctamente','ok');
+}
+
+// ════════════════ USUARIOS ════════════════
+function renderUsuarios(){
+  var roleLabel={admin:'Administrador',supervisor:'Supervisor',usuario:'Usuario'};
+  var roleCls={admin:'badgeAdmin',supervisor:'badgeSupervisor',usuario:'badgeUsuario'};
+  document.getElementById('usrBody').innerHTML=APP.users.map(function(u){
+    return '<tr>'+
+      '<td><strong>'+u.username+'</strong></td>'+
+      '<td><span class="badge '+(roleCls[u.role]||'badgeUsuario')+'">'+(roleLabel[u.role]||u.role)+'</span></td>'+
+      '<td><span class="badge '+(u.activo?'badgeActivo':'badgeSalida')+'">'+(u.activo?'Activo':'Inactivo')+'</span></td>'+
+      '<td style="display:flex;gap:6px;flex-wrap:wrap">'+
+        '<button class="btnSmSec" onclick="editarUsuario('+u.id+')">Editar</button>'+
+        (u.id!==1?'<button class="btnDanger" onclick="eliminarUsuario('+u.id+')">Eliminar</button>':'<span style="font-size:11px;color:#9ca3af;align-self:center">Admin principal</span>')+
+      '</td></tr>';
+  }).join('');
+}
+
+function abrirModalUsr(){
+  APP.editId=null;
+  document.getElementById('modalTitle').textContent='Nuevo Usuario';
+  document.getElementById('mUser').value=''; document.getElementById('mPass').value=''; document.getElementById('mRol').value='usuario';
+  document.getElementById('modalOverlay').style.display='flex';
+}
+
+function editarUsuario(id){
+  var u=APP.users.find(function(x){return x.id===id;}); if(!u) return;
+  APP.editId=id;
+  document.getElementById('modalTitle').textContent='Editar Usuario';
+  document.getElementById('mUser').value=u.username; document.getElementById('mPass').value=''; document.getElementById('mRol').value=u.role;
+  document.getElementById('modalOverlay').style.display='flex';
+}
+
+function guardarUsuario(){
+  var username=(document.getElementById('mUser').value||'').trim().toUpperCase();
+  var password=document.getElementById('mPass').value||'';
+  var role=document.getElementById('mRol').value;
+  if(!username){showToast('Usuario obligatorio','err');return;}
+  if(APP.editId===null){
+    if(!password){showToast('Contraseña obligatoria','err');return;}
+    if(APP.users.find(function(x){return x.username.toUpperCase()===username;})){showToast('Usuario ya existe','err');return;}
+    APP.users.push({id:Date.now(),username:username,password:password,role:role,activo:true});
+    showToast('Usuario creado','ok');
+  } else {
+    var idx=APP.users.findIndex(function(x){return x.id===APP.editId;}); if(idx===-1) return;
+    APP.users[idx].username=username; APP.users[idx].role=role;
+    if(password) APP.users[idx].password=password;
+    showToast('Usuario actualizado','ok');
+  }
+  lsSet('fjUsers',APP.users); cerrarModal(); renderUsuarios();
+}
+
+function eliminarUsuario(id){
+  var u=APP.users.find(function(x){return x.id===id;}); if(!u) return;
+  if(APP.currentUser&&u.id===APP.currentUser.id){showToast('No puedes eliminarte','err');return;}
+  if(!confirm('¿Eliminar usuario "'+u.username+'"?')) return;
+  APP.users=APP.users.filter(function(x){return x.id!==id;});
+  lsSet('fjUsers',APP.users); renderUsuarios(); showToast('Usuario eliminado','');
+}
+
+function cerrarModal(){document.getElementById('modalOverlay').style.display='none'; APP.editId=null;}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===e.currentTarget)cerrarModal();});
+</script>
 </body>
 </html>
